@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Altool 패치노트 - Codex / Claude 업데이트</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --surface-2: #eef2f6;
+      --text: #161a1d;
+      --muted: #5b6470;
+      --line: #d9dee6;
+      --codex: #1864ab;
+      --claude: #8b4a14;
+      --ok: #0f766e;
+      --warn: #b45309;
+      --shadow: 0 16px 40px rgba(21, 31, 44, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", "Pretendard", "Apple SD Gothic Neo", Arial, sans-serif;
+      line-height: 1.58;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .hero {
+      background:
+        linear-gradient(135deg, rgba(24, 100, 171, 0.94), rgba(17, 24, 39, 0.94)),
+        radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.26), transparent 24%);
+      color: #fff;
+      padding: 56px 24px 42px;
+    }
+
+    .wrap {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 54px);
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      max-width: 780px;
+      margin: 18px 0 0;
+      font-size: 18px;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 6px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 999px;
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.12);
+      font-size: 14px;
+    }
+
+    main {
+      padding: 30px 0 64px;
+    }
+
+    section {
+      margin-top: 22px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    section > header {
+      padding: 22px 24px 14px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fff, #fafbfc);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .section-note {
+      margin: 8px 0 0;
+      color: var(--muted);
+    }
+
+    .content {
+      padding: 22px 24px 26px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stat,
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .stat span,
+    .item p {
+      color: var(--muted);
+      margin: 6px 0 0;
+    }
+
+    .codex {
+      border-top: 4px solid var(--codex);
+    }
+
+    .claude {
+      border-top: 4px solid var(--claude);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      background: var(--surface-2);
+      color: #233044;
+    }
+
+    .badge.codex-badge {
+      background: #e8f2ff;
+      color: var(--codex);
+    }
+
+    .badge.claude-badge {
+      background: #fff3e6;
+      color: var(--claude);
+    }
+
+    .badge.ok {
+      background: #e6f7f4;
+      color: var(--ok);
+    }
+
+    .badge.warn {
+      background: #fff7ed;
+      color: var(--warn);
+    }
+
+    ul {
+      margin: 10px 0 0;
+      padding-left: 20px;
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow-wrap: anywhere;
+    }
+
+    th,
+    td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f7f9fb;
+      font-size: 14px;
+      color: #313a46;
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: #eef2f6;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.95em;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .flow span {
+      display: flex;
+      min-height: 54px;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      padding: 8px;
+      font-weight: 700;
+      color: #263241;
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+
+    summary {
+      cursor: pointer;
+      padding: 13px 15px;
+      font-weight: 700;
+      background: #f8fafc;
+    }
+
+    .details-body {
+      padding: 12px 15px 16px;
+      color: var(--muted);
+    }
+
+    .file-list {
+      columns: 2;
+      column-gap: 28px;
+      margin: 8px 0 0;
+      padding-left: 18px;
+      font-size: 14px;
+    }
+
+    .file-list li {
+      break-inside: avoid;
+      margin: 0 0 5px;
+    }
+
+    .callout {
+      border-left: 4px solid var(--ok);
+      background: #f0fbf8;
+      padding: 14px 16px;
+      border-radius: 0 8px 8px 0;
+      color: #173f3a;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    @media (max-width: 860px) {
+      .grid,
+      .grid.two,
+      .flow {
+        grid-template-columns: 1fr;
+      }
+
+      .file-list {
+        columns: 1;
+      }
+
+      .wrap {
+        width: min(100% - 28px, 1180px);
+      }
+
+      .hero {
+        padding: 40px 18px 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <h1>Altool 패치노트</h1>
+      <p>
+        원본 <strong>Altool/</strong>을 기준으로, 업데이트 배포판인
+        <strong>Altool-codex/</strong>와 <strong>Altool-claude/</strong>에서 무엇이 바뀌었는지 기존 사용자가 보기 쉽게 정리했습니다.
+      </p>
+      <div class="meta" aria-label="비교 기준">
+        <span class="pill">기준 원본: Altool/</span>
+        <span class="pill">패치 대상: Altool-codex/, Altool-claude/</span>
+        <span class="pill">비교일: 2026-07-09</span>
+        <span class="pill">비교 방식: 현재 폴더 스냅샷 기준</span>
+        <span class="pill">제외: .git, 실행 상태 파일 .altool</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section>
+      <header>
+        <h2>한눈에 보는 핵심 변경</h2>
+        <p class="section-note">이번 패치는 단순 문구 수정이 아니라, 원본 Altool을 Codex와 Claude Code 양쪽에서 바로 쓸 수 있는 배포판으로 나눈 업데이트입니다.</p>
+      </header>
+      <div class="content">
+        <div class="grid">
+          <article class="item">
+            <h3>명령어 체계 변경</h3>
+            <p>원본의 <code>/al</code> 중심 흐름이 Codex판 <code>$altool</code>, Claude판 <code>/altool</code>로 분리되었습니다.</p>
+          </article>
+          <article class="item">
+            <h3>Research-first 도입</h3>
+            <p>개발 전에 웹 조사와 디자인 시스템 정규화를 먼저 수행하도록 <code>research</code> 단계가 추가되었습니다.</p>
+          </article>
+          <article class="item">
+            <h3>자율 반복 개발 추가</h3>
+            <p><code>freedom</code> 모드가 추가되어 지정한 횟수만큼 조사, 구현, 검증, 보고 사이클을 반복할 수 있습니다.</p>
+          </article>
+          <article class="item">
+            <h3>실제 브라우저 검증 강화</h3>
+            <p><code>browser</code> 단계가 정식으로 추가되어 클릭, 입력, 반응형, 콘솔 오류, 화면 깨짐까지 확인합니다.</p>
+          </article>
+          <article class="item">
+            <h3>Step Check 검증 도구 추가</h3>
+            <p>각 단계 완료 시 체크 JSON을 만들고 <code>check.py</code>로 필수 증거 누락을 검증합니다.</p>
+          </article>
+          <article class="item">
+            <h3>내장 성능 가이드 추가</h3>
+            <p>React/Next.js 작업에 적용할 Vercel React Best Practices 스킬과 규칙 문서가 번들로 들어갔습니다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <header>
+        <h2>원본 대비 변경 규모</h2>
+        <p class="section-note">Git 이력 비교가 아니라 현재 폴더 스냅샷 기준으로 배포 관점 파일만 비교했습니다. 실행 중 생성되는 <code>.altool/</code> 상태 파일과 저장소 메타데이터인 <code>.git/</code>은 제외했습니다.</p>
+      </header>
+      <div class="content">
+        <div class="grid two">
+          <article class="stat codex">
+            <span class="badge codex-badge">Altool-codex</span>
+            <strong>+95 / ~27 / -8</strong>
+            <span>추가 95개, 수정 27개, 제거 8개</span>
+          </article>
+          <article class="stat claude">
+            <span class="badge claude-badge">Altool-claude</span>
+            <strong>+93 / ~27 / -8</strong>
+            <span>추가 93개, 수정 27개, 제거 8개</span>
+          </article>
+        </div>
+        <p class="muted">두 패치판은 엔진 개선 내용이 거의 같고, 설치 대상에 맞춰 Codex용 로컬 스킬 구조와 Claude Code용 로컬 커맨드 구조만 다릅니다.</p>
+      </div>
+    </section>
+
+    <section>
+      <header>
+        <h2>기존 사용자에게 중요한 변화</h2>
+      </header>
+      <div class="content">
+        <table>
+          <thead>
+            <tr>
+              <th>영역</th>
+              <th>원본 Altool</th>
+              <th>패치 후</th>
+              <th>사용자 영향</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>기본 명령</td>
+              <td><code>/al</code></td>
+              <td>Codex: <code>$altool</code><br>Claude Code: <code>/altool</code></td>
+              <td>기존 명령어를 새 배포판에 맞게 바꿔 입력해야 합니다.</td>
+            </tr>
+            <tr>
+              <td>자동 파이프라인</td>
+              <td>계획 → 설계 → 구현 → 분석 → 수정 → 보고 중심</td>
+              <td>조사 → 계획 → 명세 → 구현 → 분석 → 수정 → 브라우저 검증</td>
+              <td>만들기 전에 조사 근거를 쌓고, 완료 전 실제 화면 검증까지 수행합니다.</td>
+            </tr>
+            <tr>
+              <td>설계 단계</td>
+              <td><code>design</code> 단계</td>
+              <td><code>spec</code> 단계</td>
+              <td>아키텍처 3안, API, UI 체크리스트, 테스트 계획을 더 명확히 기록합니다.</td>
+            </tr>
+            <tr>
+              <td>디자인 기준</td>
+              <td><code>design.md</code>, <code>design-tokens.css</code>, 디자인 헌법 분리</td>
+              <td><code>designs/design.md</code>를 단일 구현 기준으로 강화</td>
+              <td>구현은 research 원문이 아니라 정규화된 디자인 시스템을 기준으로 합니다.</td>
+            </tr>
+            <tr>
+              <td>검증 방식</td>
+              <td>문서 체크와 Match Rate 중심</td>
+              <td>Step Check JSON, 브라우저 검증, CSS 변수 검사, 문서 상태 동기화</td>
+              <td>완료 조건이 더 빡빡해져 누락된 산출물이나 검증 증거를 잡기 쉬워졌습니다.</td>
+            </tr>
+            <tr>
+              <td>장기 작업</td>
+              <td>단일 명령 중심</td>
+              <td><code>freedom</code>, <code>say</code>, <code>ask</code>, <code>pause</code>, <code>resume</code>, <code>stop</code></td>
+              <td>긴 작업 중간에 방향 변경, 질문, 일시정지, 중단을 파일 기반 무전기 방식으로 처리합니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <header>
+        <h2>새 명령어와 파이프라인</h2>
+        <p class="section-note">패치판의 <code>oneshot</code>은 원본보다 앞단 조사와 뒷단 브라우저 검증이 강화된 7단계 흐름입니다.</p>
+      </header>
+      <div class="content">
+        <div class="flow" aria-label="Altool 7단계 파이프라인">
+          <span>1. research</span>
+          <span>2. plan</span>
+          <span>3. spec</span>
+          <span>4. run</span>
+          <span>5. analyze</span>
+          <span>6. fix</span>
+          <span>7. browser</span>
+        </div>
+        <table style="margin-top:18px">
+          <thead>
+            <tr>
+              <th>새 명령</th>
+              <th>설명</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>research</code></td>
+              <td>실제 서비스, UX 자료, 사용자 요구사항, 리스크 자료를 조사하고 <code>docs/00-research/</code>에 기록합니다.</td>
+            </tr>
+            <tr>
+              <td><code>spec</code></td>
+              <td>기존 <code>design</code> 역할을 확장해 아키텍처, API, 데이터 모델, UI 체크리스트, 테스트 계획을 명세화합니다.</td>
+            </tr>
+            <tr>
+              <td><code>browser</code></td>
+              <td>실제 브라우저 또는 Playwright로 주요 화면, 클릭, 입력, 반응형, 콘솔 오류, CSS 변수 누락을 확인합니다.</td>
+            </tr>
+            <tr>
+              <td><code>freedom</code></td>
+              <td>지정한 루프 수만큼 research부터 report까지 자율 개발 사이클을 반복합니다.</td>
+            </tr>
+            <tr>
+              <td><code>say / ask / pause / resume / stop / outbox</code></td>
+              <td>Freedom 루프 진행 중 방향 전달, 상태 질문, 일시정지, 재개, 중단, 응답 확인을 처리합니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <header>
+        <h2>패치판별 차이</h2>
+        <p class="section-note">둘 다 원본 Altool을 개선한 버전이며, 사용 중인 AI 도구에 맞춰 선택하면 됩니다.</p>
+      </header>
+      <div class="content">
+        <div class="grid two">
+          <article class="item codex">
+            <span class="badge codex-badge">Codex 버전</span>
+            <h3>Altool-codex</h3>
+            <ul>
+              <li>명령어: <code>$altool</code></li>
+              <li>진입 문서: <code>AGENTS.md</code></li>
+              <li>로컬 스킬: <code>.agents/skills/altool/</code></li>
+              <li>설치 시 <code>templates/codex/skills/</code>를 프로젝트에 복사</li>
+              <li>Codex 환경에서 바로 쓰기 위한 <code>openai.yaml</code> 포함</li>
+            </ul>
+          </article>
+          <article class="item claude">
+            <span class="badge claude-badge">Claude Code 버전</span>
+            <h3>Altool-claude</h3>
+            <ul>
+              <li>명령어: <code>/altool</code></li>
+              <li>진입 문서: <code>CLAUDE.md</code></li>
+              <li>로컬 커맨드: <code>.claude/commands/altool.md</code></li>
+              <li>설치 시 <code>templates/claude/commands/</code>와 <code>templates/claude/skills/</code>를 프로젝트에 복사</li>
+              <li>Claude Code 재시작 또는 새 세션 후 명령 사용</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <header>
+        <h2>설치와 업그레이드 메모</h2>
+      </header>
+      <div class="content">
+        <div class="callout">
+          기존 프로젝트에 적용할 때는 새 배포판의 <code>setup.bat</code>을 실행해 대상 프로젝트 폴더를 선택하면 됩니다. 기존 <code>.gitignore</code>는 덮어쓰지 않고, 필요한 경우 <code>.altool/</code> 제외 규칙을 직접 추가하라는 안내만 표시합니다.
+        </div>
+        <table style="margin-top:18px">
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>변경 내용</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>setup.bat</code></td>
+              <td>비대화형 경로 인자 지원, 폴더 선택 실패 시 수동 입력, Codex/Claude별 로컬 스킬 또는 커맨드 복사 추가.</td>
+            </tr>
+            <tr>
+              <td><code>LICENSE</code>, <code>THIRD_PARTY_NOTICES.md</code></td>
+              <td>MIT 라이선스와 번들된 제3자 자료 고지를 명시.</td>
+            </tr>
+            <tr>
+              <td><code>README.md</code></td>
+              <td>명령어, 설치 방법, Research-first, Freedom, 브라우저 검증, 패치판별 사용법을 새로 정리.</td>
+            </tr>
+            <tr>
+              <td>Vercel React Best Practices</td>
+              <td>React/Next.js 성능, 렌더링, 서버, 번들, 클라이언트, 비동기 처리 관련 규칙을 로컬 스킬로 번들.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <header>
+        <h2>제거되거나 통합된 항목</h2>
+        <p class="section-note">삭제는 기능 축소라기보다 새 명령 체계와 단일 디자인 기준으로 정리된 결과입니다.</p>
+      </header>
+      <div class="content">
+        <ul>
+          <li><code>altool/steps/design.md</code>와 <code>altool/templates/design.template.md</code>는 <code>spec</code> 단계로 대체되었습니다.</li>
+          <li><code>designs/design-constitution.md</code>와 <code>designs/design-tokens.css</code>는 <code>designs/design.md</code> 중심 정책으로 통합되었습니다.</li>
+          <li>원본의 <code>templates/.claude/commands/al.md</code>와 <code>templates/CLAUDE.md</code>는 패치판별 구조로 이동했습니다.</li>
+          <li>원본 내부의 <code>altool/CLAUDE.md</code>는 루트 <code>AGENTS.md</code> 또는 <code>CLAUDE.md</code>와 로컬 커맨드/스킬 문서로 재배치되었습니다.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <header>
+        <h2>상세 파일 변경 목록</h2>
+        <p class="section-note">사용자에게 바로 영향이 큰 파일 중심입니다. Vercel 규칙 파일은 수가 많아 묶어서 표시했습니다.</p>
+      </header>
+      <div class="content">
+        <details open>
+          <summary>Altool-codex - 원본 대비 주요 추가</summary>
+          <div class="details-body">
+            <ul class="file-list">
+              <li><code>AGENTS.md</code></li>
+              <li><code>.agents/skills/altool/SKILL.md</code></li>
+              <li><code>.agents/skills/altool/agents/openai.yaml</code></li>
+              <li><code>altool/scripts/check.py</code></li>
+              <li><code>altool/scripts/lesson.py</code></li>
+              <li><code>altool/scripts/radio.py</code></li>
+              <li><code>altool/scripts/freedom_loop.py</code></li>
+              <li><code>altool/steps/research.md</code></li>
+              <li><code>altool/steps/spec.md</code></li>
+              <li><code>altool/steps/browser.md</code></li>
+              <li><code>altool/steps/freedom.md</code></li>
+              <li><code>altool/templates/research.template.md</code></li>
+              <li><code>altool/templates/spec.template.md</code></li>
+              <li><code>altool/templates/browser.template.md</code></li>
+              <li><code>templates/codex/skills/altool/...</code></li>
+              <li><code>templates/codex/skills/vercel-react-best-practices/...</code></li>
+              <li><code>LICENSE</code></li>
+              <li><code>THIRD_PARTY_NOTICES.md</code></li>
+            </ul>
+          </div>
+        </details>
+
+        <details>
+          <summary>Altool-claude - 원본 대비 주요 추가</summary>
+          <div class="details-body">
+            <ul class="file-list">
+              <li><code>CLAUDE.md</code></li>
+              <li><code>.claude/commands/altool.md</code></li>
+              <li><code>altool/scripts/check.py</code></li>
+              <li><code>altool/scripts/lesson.py</code></li>
+              <li><code>altool/scripts/radio.py</code></li>
+              <li><code>altool/scripts/freedom_loop.py</code></li>
+              <li><code>altool/steps/research.md</code></li>
+              <li><code>altool/steps/spec.md</code></li>
+              <li><code>altool/steps/browser.md</code></li>
+              <li><code>altool/steps/freedom.md</code></li>
+              <li><code>altool/templates/research.template.md</code></li>
+              <li><code>altool/templates/spec.template.md</code></li>
+              <li><code>altool/templates/browser.template.md</code></li>
+              <li><code>templates/claude/commands/altool.md</code></li>
+              <li><code>templates/claude/skills/vercel-react-best-practices/...</code></li>
+              <li><code>LICENSE</code></li>
+              <li><code>THIRD_PARTY_NOTICES.md</code></li>
+            </ul>
+          </div>
+        </details>
+
+        <details>
+          <summary>두 패치판 공통 수정 파일</summary>
+          <div class="details-body">
+            <ul class="file-list">
+              <li><code>README.md</code></li>
+              <li><code>setup.bat</code></li>
+              <li><code>constitution.md</code></li>
+              <li><code>designs/design.md</code></li>
+              <li><code>altool/steps/setup.md</code></li>
+              <li><code>altool/steps/oneshot.md</code></li>
+              <li><code>altool/steps/plan.md</code></li>
+              <li><code>altool/steps/run.md</code></li>
+              <li><code>altool/steps/analyze.md</code></li>
+              <li><code>altool/steps/fix.md</code></li>
+              <li><code>altool/steps/report.md</code></li>
+              <li><code>altool/steps/status.md</code></li>
+              <li><code>altool/steps/guide.md</code></li>
+              <li><code>altool/steps/design_source.md</code></li>
+              <li><code>altool/steps/lesson.md</code></li>
+              <li><code>altool/templates/plan.template.md</code></li>
+              <li><code>altool/templates/run.template.md</code></li>
+              <li><code>altool/templates/analyze.template.md</code></li>
+              <li><code>altool/templates/fix.template.md</code></li>
+              <li><code>altool/templates/report.template.md</code></li>
+              <li><code>guides/*.html</code></li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
