@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD 빌더 — Altool</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #232733;
+  --border: #2d3140;
+  --text: #e4e6ed;
+  --text2: #9ca0b0;
+  --blue: #5b8def;
+  --blue-bg: rgba(91,141,239,0.08);
+  --green: #4ade80;
+  --green-bg: rgba(74,222,128,0.08);
+  --orange: #f59e0b;
+  --orange-bg: rgba(245,158,11,0.08);
+  --purple: #a78bfa;
+  --purple-bg: rgba(167,139,250,0.08);
+  --pink: #f472b6;
+  --pink-bg: rgba(244,114,182,0.08);
+  --red: #f87171;
+  --cyan: #22d3ee;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Pretendard Variable', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 40px 24px 160px;
+}
+
+/* ── Hero ── */
+.hero { text-align: center; padding: 60px 0 40px; }
+.hero-badge {
+  display: inline-block;
+  background: var(--purple-bg);
+  border: 1px solid rgba(167,139,250,0.2);
+  color: var(--purple);
+  font-size: 13px; font-weight: 600;
+  padding: 6px 16px; border-radius: 100px;
+  margin-bottom: 20px; letter-spacing: 0.5px;
+}
+.hero h1 {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #fff 0%, #9ca0b0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero p { font-size: 16px; color: var(--text2); max-width: 540px; margin: 0 auto; }
+
+/* ── How-to ── */
+.howto {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 32px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.howto-step { text-align: center; }
+.howto-step .num {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--purple-bg);
+  color: var(--purple);
+  font-size: 13px; font-weight: 700;
+  margin-bottom: 8px;
+  border: 1px solid rgba(167,139,250,0.25);
+}
+.howto-step .label { font-size: 13px; color: var(--text); font-weight: 600; }
+.howto-step .desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+@media (max-width: 600px) { .howto { grid-template-columns: 1fr; } }
+
+/* ── Field Block ── */
+.field {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.field-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+.field-num {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  min-width: 26px; height: 26px;
+  border-radius: 8px;
+  background: var(--surface2);
+  color: var(--text2);
+  font-size: 12px; font-weight: 700;
+  flex-shrink: 0;
+  padding: 0 8px;
+}
+.field-title { font-size: 16px; font-weight: 700; color: var(--text); }
+.field-required { color: var(--orange); font-size: 12px; font-weight: 700; margin-left: 4px; }
+.field-optional { color: var(--text2); font-size: 12px; font-weight: 600; margin-left: 4px; }
+.field-hint { font-size: 13px; color: var(--text2); margin-bottom: 12px; padding-left: 36px; }
+.field-hint code { background: rgba(34,211,238,0.06); color: var(--cyan); padding: 1px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 12px; }
+
+input[type="text"], textarea {
+  width: 100%;
+  background: #0d0f14;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  padding: 12px 14px;
+  line-height: 1.6;
+  transition: border-color 0.15s, background 0.15s;
+}
+input[type="text"]:focus, textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  background: #0a0c11;
+}
+input[type="text"]::placeholder, textarea::placeholder { color: #5a5e6e; }
+textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+
+/* ── Multi Items (기능, nice-to-have, out-of-scope) ── */
+.items { display: flex; flex-direction: column; gap: 8px; }
+.item-row { display: flex; gap: 8px; align-items: center; }
+.item-row input { flex: 1; }
+.item-remove {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.item-remove:hover { border-color: var(--red); color: var(--red); }
+.item-add {
+  margin-top: 4px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--text2);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.item-add:hover { border-color: var(--blue); color: var(--blue); border-style: solid; }
+
+/* ── Screen Chips ── */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.chip {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.chip:hover { border-color: var(--blue); }
+.chip.selected {
+  background: var(--blue-bg);
+  border-color: var(--blue);
+  color: var(--blue);
+  font-weight: 600;
+}
+.chip.selected::before { content: '✓'; font-size: 11px; font-weight: 700; }
+.chip-add-row { display: flex; gap: 8px; margin-top: 12px; }
+.chip-add-row input { flex: 1; }
+.chip-add-row button {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.chip-add-row button:hover { border-color: var(--blue); color: var(--blue); }
+.custom-chip { background: var(--purple-bg); color: var(--purple); border-color: rgba(167,139,250,0.3); }
+.custom-chip.selected { background: var(--purple-bg); border-color: var(--purple); color: var(--purple); }
+
+/* ── Generate Bar ── */
+.generate-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(15,17,23,0.92);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 14px 24px;
+  z-index: 50;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+}
+.generate-bar .progress-text {
+  font-size: 13px;
+  color: var(--text2);
+}
+.generate-bar .progress-text strong { color: var(--text); }
+.btn-generate {
+  background: linear-gradient(135deg, var(--purple) 0%, var(--blue) 100%);
+  border: none;
+  color: white;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-generate:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(91,141,239,0.3); }
+.btn-generate:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ── Preview Modal ── */
+.preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.2s ease;
+}
+.preview-overlay.open { display: flex; }
+.preview-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 720px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+.preview-head {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.preview-head h3 { font-size: 16px; font-weight: 700; }
+.preview-close {
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-size: 22px;
+  cursor: pointer;
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.preview-close:hover { background: var(--surface2); color: var(--text); }
+.preview-body {
+  flex: 1;
+  overflow: auto;
+  padding: 20px 24px;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 13px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+  background: #0d0f14;
+}
+.preview-foot {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.preview-foot input {
+  flex: 1;
+  min-width: 200px;
+}
+.btn-action {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-action:hover { border-color: var(--blue); color: var(--blue); }
+.btn-action.primary {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: white;
+}
+.btn-action.primary:hover { background: #4a7de0; color: white; }
+.btn-action.copied { border-color: var(--green); color: var(--green); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 100px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface);
+  border: 1px solid var(--green);
+  color: var(--green);
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 300;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Footer ── */
+.footer {
+  text-align: center;
+  padding: 30px 0 0;
+  color: var(--text2);
+  font-size: 12px;
+}
+.footer a { color: var(--cyan); text-decoration: none; }
+
+/* ── File Upload (참고 문서) ── */
+.dropzone {
+  border: 2px dashed var(--border);
+  background: var(--surface2);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 12px;
+}
+.dropzone:hover, .dropzone.dragover {
+  border-color: var(--cyan);
+  background: rgba(34,211,238,0.04);
+}
+.dropzone-icon { font-size: 28px; margin-bottom: 8px; opacity: 0.7; }
+.dropzone-title { font-size: 14px; color: var(--text); font-weight: 600; margin-bottom: 4px; }
+.dropzone-sub { font-size: 12px; color: var(--text2); }
+.file-list { display: flex; flex-direction: column; gap: 8px; }
+.file-item {
+  display: grid;
+  grid-template-columns: 32px 1fr auto 36px;
+  gap: 12px;
+  align-items: center;
+  background: #0d0f14;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.file-icon {
+  font-size: 18px;
+  width: 32px; height: 32px;
+  background: var(--surface2);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.file-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.file-name { font-size: 13px; color: var(--text); font-weight: 600; word-break: break-all; }
+.file-size { font-size: 11px; color: var(--text2); }
+.file-comment {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 10px;
+  width: 220px;
+}
+.file-comment:focus { outline: none; border-color: var(--blue); }
+@media (max-width: 600px) {
+  .file-item { grid-template-columns: 32px 1fr 36px; }
+  .file-comment { grid-column: 1 / -1; width: 100%; margin-top: 4px; }
+}
+
+/* ── Advanced Section (접힘) ── */
+.advanced-toggle {
+  width: 100%;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 18px 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  transition: all 0.15s;
+}
+.advanced-toggle:hover { border-color: var(--purple); color: var(--purple); border-style: solid; }
+.advanced-toggle .at-text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.advanced-toggle .at-sub { font-size: 12px; color: var(--text2); font-weight: 400; }
+.advanced-toggle .at-arrow { font-size: 14px; color: var(--text2); transition: transform 0.3s; }
+.advanced-section { display: none; }
+.advanced-section.open { display: block; animation: slideDown 0.3s ease; }
+.advanced-toggle.open .at-arrow { transform: rotate(180deg); color: var(--purple); }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Pair Row (역할명 + 권한 요약 / 데이터명 + 설명) ── */
+.pair-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.4fr) 1fr 36px;
+  gap: 8px;
+  align-items: center;
+}
+.pair-row input { width: 100%; }
+@media (max-width: 540px) {
+  .pair-row { grid-template-columns: 1fr 36px; }
+  .pair-row > input:first-child { grid-column: 1 / -1; }
+}
+
+/* ── Persona Card ── */
+.persona-card {
+  background: #0d0f14;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+.persona-card-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr 36px;
+  gap: 8px;
+  align-items: center;
+}
+@media (max-width: 540px) {
+  .persona-card-head { grid-template-columns: 1fr 36px; }
+  .persona-card-head > input:nth-child(2) { grid-column: 1 / -1; }
+}
+.persona-card textarea { min-height: 70px; }
+
+@media (max-width: 600px) {
+  .container { padding: 24px 16px 160px; }
+  .field { padding: 18px; }
+  .field-hint { padding-left: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <section class="hero">
+    <div class="hero-badge">PRD Builder · for Altool</div>
+    <h1>PRD를 막연하게 느끼셨다면</h1>
+    <p>아래 폼만 채우면 <strong style="color:var(--cyan);">prd/{이름}.md</strong> 파일로 다운로드됩니다.<br>
+       필수 7개로 시작하고, 더 정확한 결과물이 필요하면 <strong style="color:var(--purple);">고급 옵션 5개</strong>를 펼쳐 채워보세요.</p>
+  </section>
+
+  <div class="howto">
+    <div class="howto-step">
+      <div class="num">1</div>
+      <div class="label">폼 채우기</div>
+      <div class="desc">아는 것만, 한 줄씩</div>
+    </div>
+    <div class="howto-step">
+      <div class="num">2</div>
+      <div class="label">PRD 생성 → 다운로드</div>
+      <div class="desc">.md 파일이 받아짐</div>
+    </div>
+    <div class="howto-step">
+      <div class="num">3</div>
+      <div class="label">prd/ 폴더에 넣기</div>
+      <div class="desc">/altool oneshot이 자동 감지</div>
+    </div>
+  </div>
+
+  <!-- 1. 제품 한 줄 설명 -->
+  <div class="field">
+    <div class="field-head">
+      <span class="field-num">1</span>
+      <span class="field-title">제품 한 줄 설명<span class="field-required">*</span></span>
+    </div>
+    <div class="field-hint">한 문장으로 "이게 뭐냐"를 설명. 예: <code>매일 운동 기록을 사진과 함께 남기는 헬스 일기장</code></div>
+    <input type="text" id="f-summary" placeholder="예: 매일 운동 기록을 사진과 함께 남기는 헬스 일기장">
+  </div>
+
+  <!-- 2. 타겟 사용자 -->
+  <div class="field">
+    <div class="field-head">
+      <span class="field-num">2</span>
+      <span class="field-title">누가 쓰나<span class="field-required">*</span></span>
+    </div>
+    <div class="field-hint">"누구나" 말고 구체적으로. 예: <code>주 3회 이상 헬스장 가는 20–30대 직장인</code></div>
+    <input type="text" id="f-user" placeholder="예: 주 3회 이상 헬스장 가는 20–30대 직장인">
+  </div>
+
+  <!-- 3. 어떤 문제 -->
+  <div class="field">
+    <div class="field-head">
+      <span class="field-num">3</span>
+      <span class="field-title">어떤 문제를 푸나<span class="field-required">*</span></span>
+    </div>
+    <div class="field-hint">사용자가 지금 겪는 불편. 예: <code>매번 메모장에 적자니 사진 첨부가 안 되고, 인스타에 올리자니 너무 공개적이다</code></div>
+    <textarea id="f-problem" placeholder="예: 매번 메모장에 적자니 사진 첨부가 안 되고, 인스타에 올리자니 너무 공개적이다"></textarea>
+  </div>
+
+  <!-- 4. 핵심 기능 -->
+  <div class="field">
+    <div class="field-head">
+      <span class="field-num">4</span>
+      <span class="field-title">핵심 기능 (3~5개)<span class="field-required">*</span></span>
+    </div>
+    <div class="field-hint">한 줄씩, 동사로 시작. 예: <code>운동 기록을 사진·텍스트로 작성한다</code> · <code>달력에서 운동한 날을 한눈에 본다</code></div>
+    <div class="items" id="features">
+      <div class="item-row">
+        <input type="text" placeholder="예: 운동 기록을 사진·텍스트로 작성한다">
+        <button type="button" class="item-remove" onclick="removeRow(this)" aria-label="삭제">×</button>
+      </div>
+      <div class="item-row">
+        <input type="text" placeholder="예: 달력에서 운동한 날을 한눈에 본다">
+        <button type="button" class="item-remove" onclick="removeRow(this)" aria-label="삭제">×</button>
+      </div>
+      <div class="item-row">
+        <input type="text" placeholder="예: 주별·월별 통계를 그래프로 본다">
+        <button type="button" class="item-remove" onclick="removeRow(this)" aria-label="삭제">×</button>
+      </div>
+    </div>
+    <button type="button" class="item-add" onclick="addRow('features', '핵심 기능 추가')">+ 기능 추가</button>
+  </div>
+
+  <!-- 5. 화면 목록 -->
+  <div class="field">
+    <div class="field-head">
+      <span class="field-num">5</span>
+      <span class="field-title">필요한 화면 (클릭으로 선택)<span class="field-required">*</span></span>
+    </div>
+    <div class="field-hint">자주 쓰는 화면입니다. 필요한 걸 클릭하고, 없는 건 아래에서 직접 추가하세요.</div>
+    <div class="chips" id="screens">
+      <button type="button" class="chip" onclick="toggleChip(this)">메인/홈</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">로그인</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">회원가입</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">대시보드</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">목록 페이지</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">상세 페이지</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">작성/편집</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">검색</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">마이페이지/프로필</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">설정</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">알림</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">통계/분석</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">결제/주문</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">채팅/메시지</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">관리자</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">랜딩 페이지</button>
+      <button type="button" class="chip" onclick="toggleChip(this)">404 / 에러</button>
+    </div>
+    <div class="chip-add-row">
+      <input type="text" id="chip-input" placeholder="없는 화면이면 직접 입력 (예: 운동 캘린더)" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomChip();}">
+      <button type="button" onclick="addCustomChip()">+ 추가</button>
+    </div>
+  </div>
+
+  <!-- 6. 있으면 좋은 것 -->
+  <div class="field">
+    <div class="field-head">
+      <span class="field-num">6</span>
+      <span class="field-title">있으면 좋은 것<span class="field-optional">선택</span></span>
+    </div>
+    <div class="field-hint">필수는 아니지만 있으면 더 좋은 기능. 시간 남으면 추가 — 핵심 기능과 분리해서 적어주세요.</div>
+    <div class="items" id="nice">
+      <div class="item-row">
+        <input type="text" placeholder="예: 다크모드">
+        <button type="button" class="item-remove" onclick="removeRow(this)" aria-label="삭제">×</button>
+      </div>
+    </div>
+    <button type="button" class="item-add" onclick="addRow('nice', '있으면 좋은 것 추가')">+ 추가</button>
+  </div>
+
+  <!-- 7. 하지 말 것 -->
+  <div class="field">
+    <div class="field-head">
+      <span class="field-num">7</span>
+      <span class="field-title">하지 말 것 (Out of Scope)<span class="field-optional">선택</span></span>
+    </div>
+    <div class="field-hint">"이건 이번에 안 만든다"를 명시하면 Claude Code가 과하게 만드는 걸 막을 수 있어요. 예: <code>SNS 공유 기능 안 함</code></div>
+    <div class="items" id="out">
+      <div class="item-row">
+        <input type="text" placeholder="예: SNS 공유 기능 안 함">
+        <button type="button" class="item-remove" onclick="removeRow(this)" aria-label="삭제">×</button>
+      </div>
+    </div>
+    <button type="button" class="item-add" onclick="addRow('out', '범위 외 항목 추가')">+ 추가</button>
+  </div>
+
+  <!-- ── 참고 문서 업로드 ── -->
+  <div class="field">
+    <div class="field-head">
+      <span class="field-num">📎</span>
+      <span class="field-title">참고 문서 업로드<span class="field-optional">선택</span></span>
+    </div>
+    <div class="field-hint">기존 요구사항 문서·와이어프레임·기획서 등이 있다면 첨부하세요. PRD와 함께 ZIP으로 묶여 다운로드되고, 압축을 풀면 <code>prd/refs/</code> 폴더에 자동 배치됩니다. <strong>Claude Code는 PRD를 읽을 때 같은 폴더의 <code>refs/</code> 안 모든 파일을 함께 읽습니다.</strong></div>
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('file-picker').click()">
+      <div class="dropzone-icon">📁</div>
+      <div class="dropzone-title">파일을 여기로 드래그하거나 클릭해서 선택</div>
+      <div class="dropzone-sub">PDF · 이미지 · DOCX · XLSX · MD · TXT 등 — 각 파일 옆에 한 줄 코멘트도 남길 수 있어요</div>
+    </div>
+    <input type="file" id="file-picker" multiple style="display:none" onchange="handleFiles(this.files)">
+    <div class="file-list" id="file-list"></div>
+  </div>
+
+  <!-- ── Advanced Section Toggle ── -->
+  <button type="button" class="advanced-toggle" id="adv-toggle" onclick="toggleAdvanced()">
+    <span class="at-text">
+      <span>🎯 더 정확한 PRD를 위해 (선택 5항목)</span>
+      <span class="at-sub">사용자 역할 · 핵심 데이터 · 비즈니스 규칙 · 페르소나 · 외부 연동</span>
+    </span>
+    <span class="at-arrow">▼</span>
+  </button>
+
+  <div class="advanced-section" id="adv-section">
+
+    <!-- 8. 사용자 역할 -->
+    <div class="field">
+      <div class="field-head">
+        <span class="field-num">8</span>
+        <span class="field-title">사용자 역할 / 권한<span class="field-optional">선택</span></span>
+      </div>
+      <div class="field-hint">시스템에 여러 역할이 있다면 각 역할이 무엇을 할 수 있는지 한 줄씩. 예: <code>관리자 — 모든 회원·콘텐츠 관리</code> · <code>일반 사용자 — 본인 데이터만 작성·수정</code></div>
+      <div class="items" id="roles">
+        <div class="pair-row">
+          <input type="text" placeholder="역할명 (예: 관리자)">
+          <input type="text" placeholder="권한 요약 (예: 모든 회원·콘텐츠 관리)">
+          <button type="button" class="item-remove" onclick="removeRow(this)" aria-label="삭제">×</button>
+        </div>
+        <div class="pair-row">
+          <input type="text" placeholder="역할명 (예: 일반 사용자)">
+          <input type="text" placeholder="권한 요약 (예: 본인 데이터만 작성·수정)">
+          <button type="button" class="item-remove" onclick="removeRow(this)" aria-label="삭제">×</button>
+        </div>
+      </div>
+      <button type="button" class="item-add" onclick="addPair('roles', '역할명', '권한 요약')">+ 역할 추가</button>
+    </div>
+
+    <!-- 9. 핵심 데이터 -->
+    <div class="field">
+      <div class="field-head">
+        <span class="field-num">9</span>
+        <span class="field-title">핵심 데이터 / 객체<span class="field-optional">선택</span></span>
+      </div>
+      <div class="field-hint">시스템이 다루는 주요 데이터(엔티티). 예: <code>회원 — 가입한 사용자, 이메일·비밀번호로 식별</code> · <code>주문 — 회원이 만든 구매 기록, 상태/금액/품목 포함</code></div>
+      <div class="items" id="entities">
+        <div class="pair-row">
+          <input type="text" placeholder="객체명 (예: 회원)">
+          <input type="text" placeholder="설명 (예: 가입한 사용자, 이메일로 식별)">
+          <button type="button" class="item-remove" onclick="removeRow(this)" aria-label="삭제">×</button>
+        </div>
+        <div class="pair-row">
+          <input type="text" placeholder="객체명 (예: 주문)">
+          <input type="text" placeholder="설명 (예: 회원의 구매 기록, 상태·금액 포함)">
+          <button type="button" class="item-remove" onclick="removeRow(this)" aria-label="삭제">×</button>
+        </div>
+      </div>
+      <button type="button" class="item-add" onclick="addPair('entities', '객체명', '설명')">+ 객체 추가</button>
+    </div>
+
+    <!-- 10. 비즈니스 규칙 -->
+    <div class="field">
+      <div class="field-head">
+        <span class="field-num">10</span>
+        <span class="field-title">비즈니스 규칙 / 예외처리<span class="field-optional">선택</span></span>
+      </div>
+      <div class="field-hint">"이런 경우엔 이렇게 동작" 같은 예외 규칙. 막연한 정상 흐름이 아니라 <strong>엣지 케이스</strong>를 적어주세요. 예: <code>같은 이메일로 두 번 가입 안 됨</code> · <code>주문 후 24시간 안에만 취소 가능</code></div>
+      <div class="items" id="rules">
+        <div class="item-row">
+          <input type="text" placeholder="예: 같은 이메일로 두 번 가입 안 됨">
+          <button type="button" class="item-remove" onclick="removeRow(this)" aria-label="삭제">×</button>
+        </div>
+      </div>
+      <button type="button" class="item-add" onclick="addRow('rules', '비즈니스 규칙 추가')">+ 규칙 추가</button>
+    </div>
+
+    <!-- 11. 페르소나 시나리오 -->
+    <div class="field">
+      <div class="field-head">
+        <span class="field-num">11</span>
+        <span class="field-title">페르소나 시나리오<span class="field-optional">선택</span></span>
+      </div>
+      <div class="field-hint">대표 사용자 1~3명의 일상 사용 흐름을 적으면 Claude Code가 UI/UX를 훨씬 구체적으로 설계합니다. 이름·나이·직업이 구체적일수록 좋아요.</div>
+      <div class="items" id="personas">
+        <div class="persona-card">
+          <div class="persona-card-head">
+            <input type="text" placeholder="이름·나이 (예: 김민지, 28세)">
+            <input type="text" placeholder="역할·상황 (예: 직장인, 주 3회 헬스장)">
+            <button type="button" class="item-remove" onclick="removeRow(this)" aria-label="삭제">×</button>
+          </div>
+          <textarea placeholder="시나리오 (예: 운동 후 락커룸에서 폰을 꺼내 1분 내로 그날 한 운동·세트·중량을 기록한다. 주말엔 주간 통계를 본다.)"></textarea>
+        </div>
+      </div>
+      <button type="button" class="item-add" onclick="addPersona()">+ 페르소나 추가</button>
+    </div>
+
+    <!-- 12. 외부 연동 -->
+    <div class="field">
+      <div class="field-head">
+        <span class="field-num">12</span>
+        <span class="field-title">외부 연동 / 통합<span class="field-optional">선택</span></span>
+      </div>
+      <div class="field-hint">서비스가 외부 시스템과 주고받는 것이 있다면 클릭으로 선택하세요.</div>
+      <div class="chips" id="integrations">
+        <button type="button" class="chip" onclick="toggleChip(this)">엑셀 import</button>
+        <button type="button" class="chip" onclick="toggleChip(this)">엑셀 export</button>
+        <button type="button" class="chip" onclick="toggleChip(this)">REST API 호출</button>
+        <button type="button" class="chip" onclick="toggleChip(this)">OAuth 로그인 (Google·Kakao 등)</button>
+        <button type="button" class="chip" onclick="toggleChip(this)">결제 PG (토스·아임포트 등)</button>
+        <button type="button" class="chip" onclick="toggleChip(this)">SMS 발송</button>
+        <button type="button" class="chip" onclick="toggleChip(this)">이메일 발송</button>
+        <button type="button" class="chip" onclick="toggleChip(this)">파일 업로드 (이미지·PDF)</button>
+        <button type="button" class="chip" onclick="toggleChip(this)">푸시 알림</button>
+        <button type="button" class="chip" onclick="toggleChip(this)">지도 / 위치</button>
+        <button type="button" class="chip" onclick="toggleChip(this)">AI / LLM API</button>
+        <button type="button" class="chip" onclick="toggleChip(this)">웹훅 수신</button>
+      </div>
+      <div class="chip-add-row">
+        <input type="text" id="int-input" placeholder="없는 연동이면 직접 입력 (예: 회사 ERP)" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomIntegration();}">
+        <button type="button" onclick="addCustomIntegration()">+ 추가</button>
+      </div>
+    </div>
+
+  </div><!-- /advanced-section -->
+
+</div>
+
+<!-- Generate Bar -->
+<div class="generate-bar">
+  <div class="progress-text">
+    필수 <strong id="filled">0</strong>/5
+    <span style="opacity:0.4; margin:0 8px;">·</span>
+    선택 <strong id="filled-opt" style="color:var(--purple);">0</strong>/5
+  </div>
+  <button class="btn-generate" id="btn-generate" onclick="generate()" disabled>
+    <span>📝</span> PRD 생성
+  </button>
+</div>
+
+<!-- Preview Modal -->
+<div class="preview-overlay" id="preview">
+  <div class="preview-modal">
+    <div class="preview-head">
+      <h3>📄 미리보기 — 이 내용으로 다운로드됩니다</h3>
+      <button class="preview-close" onclick="closePreview()" aria-label="닫기">✕</button>
+    </div>
+    <div class="preview-body" id="preview-body"></div>
+    <div class="preview-foot">
+      <input type="text" id="filename" placeholder="파일명 (자동 생성됨)">
+      <button class="btn-action" onclick="copyPRD()" id="btn-copy">📋 복사</button>
+      <button class="btn-action primary" onclick="downloadPRD()">⬇ 다운로드</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<div class="container" style="padding-top:0; padding-bottom:32px;">
+  <div class="footer">
+    Altool · PRD Builder &nbsp;·&nbsp; 다운로드한 .md 파일을 <code style="background:rgba(34,211,238,0.06);color:var(--cyan);padding:1px 6px;border-radius:4px;font-family:'Fira Code',monospace;font-size:12px;">prd/</code> 폴더에 넣고 <code style="background:rgba(34,211,238,0.06);color:var(--cyan);padding:1px 6px;border-radius:4px;font-family:'Fira Code',monospace;font-size:12px;">/altool oneshot</code> 실행
+  </div>
+</div>
+
+<script>
+// ── 동적 행 추가/삭제 ──
+function addRow(containerId, placeholder) {
+  const c = document.getElementById(containerId);
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.innerHTML = `
+    <input type="text" placeholder="${placeholder}">
+    <button type="button" class="item-remove" onclick="removeRow(this)" aria-label="삭제">×</button>
+  `;
+  c.appendChild(row);
+  row.querySelector('input').focus();
+  updateProgress();
+}
+function removeRow(btn) {
+  // .item-row, .pair-row, .persona-card-head 모두 처리
+  const row = btn.closest('.item-row, .pair-row, .persona-card');
+  const container = row.parentElement;
+  if (container.children.length > 1) {
+    row.remove();
+  } else {
+    row.querySelectorAll('input, textarea').forEach(i => i.value = '');
+  }
+  updateProgress();
+}
+
+// ── Pair Row 추가 (역할/권한, 객체/설명) ──
+function addPair(containerId, ph1, ph2) {
+  const c = document.getElementById(containerId);
+  const row = document.createElement('div');
+  row.className = 'pair-row';
+  row.innerHTML = `
+    <input type="text" placeholder="${ph1}">
+    <input type="text" placeholder="${ph2}">
+    <button type="button" class="item-remove" onclick="removeRow(this)" aria-label="삭제">×</button>
+  `;
+  c.appendChild(row);
+  row.querySelector('input').focus();
+  updateProgress();
+}
+
+// ── Persona Card 추가 ──
+function addPersona() {
+  const c = document.getElementById('personas');
+  const card = document.createElement('div');
+  card.className = 'persona-card';
+  card.innerHTML = `
+    <div class="persona-card-head">
+      <input type="text" placeholder="이름·나이 (예: 김민지, 28세)">
+      <input type="text" placeholder="역할·상황 (예: 직장인, 주 3회 헬스장)">
+      <button type="button" class="item-remove" onclick="removeRow(this)" aria-label="삭제">×</button>
+    </div>
+    <textarea placeholder="시나리오 (예: 운동 후 락커룸에서 1분 내로 그날 한 운동을 기록한다.)"></textarea>
+  `;
+  c.appendChild(card);
+  card.querySelector('input').focus();
+  updateProgress();
+}
+
+// ── Advanced Section 토글 ──
+function toggleAdvanced() {
+  const sec = document.getElementById('adv-section');
+  const btn = document.getElementById('adv-toggle');
+  const open = sec.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  if (open) setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+// ── 참고 문서 업로드 ──
+const _files = []; // { file: File, comment: string, id: string }
+function handleFiles(fileList) {
+  for (const f of fileList) {
+    // 중복 검사 (이름 + 크기)
+    const dup = _files.some(x => x.file.name === f.name && x.file.size === f.size);
+    if (dup) { showToast(`이미 추가됨: ${f.name}`); continue; }
+    _files.push({ file: f, comment: '', id: 'f' + Date.now() + Math.random().toString(36).slice(2, 6) });
+  }
+  renderFiles();
+}
+function removeFile(id) {
+  const i = _files.findIndex(x => x.id === id);
+  if (i >= 0) _files.splice(i, 1);
+  renderFiles();
+}
+function setFileComment(id, val) {
+  const f = _files.find(x => x.id === id);
+  if (f) f.comment = val;
+}
+function fileIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  if (['pdf'].includes(ext)) return '📕';
+  if (['png','jpg','jpeg','gif','webp','svg'].includes(ext)) return '🖼';
+  if (['doc','docx'].includes(ext)) return '📄';
+  if (['xls','xlsx','csv'].includes(ext)) return '📊';
+  if (['ppt','pptx'].includes(ext)) return '📽';
+  if (['md','txt'].includes(ext)) return '📝';
+  if (['zip','7z','rar','tar','gz'].includes(ext)) return '🗜';
+  if (['mp4','mov','avi','webm'].includes(ext)) return '🎬';
+  return '📎';
+}
+function fmtSize(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+  return (n/(1024*1024)).toFixed(1) + ' MB';
+}
+function renderFiles() {
+  const list = document.getElementById('file-list');
+  list.innerHTML = _files.map(x => `
+    <div class="file-item">
+      <div class="file-icon">${fileIcon(x.file.name)}</div>
+      <div class="file-meta">
+        <div class="file-name">${escapeHtml(x.file.name)}</div>
+        <div class="file-size">${fmtSize(x.file.size)}</div>
+      </div>
+      <input type="text" class="file-comment" placeholder="(선택) 한 줄 코멘트" value="${escapeHtml(x.comment)}" oninput="setFileComment('${x.id}', this.value)">
+      <button type="button" class="item-remove" onclick="removeFile('${x.id}')" aria-label="삭제">×</button>
+    </div>
+  `).join('');
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+// 드래그 & 드롭
+(function initDropzone() {
+  const dz = document.getElementById('dropzone');
+  if (!dz) return;
+  ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => {
+    e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover');
+  }));
+  ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => {
+    e.preventDefault(); e.stopPropagation(); dz.classList.remove('dragover');
+  }));
+  dz.addEventListener('drop', e => {
+    if (e.dataTransfer && e.dataTransfer.files) handleFiles(e.dataTransfer.files);
+  });
+  // 페이지 전체에서 드롭 이벤트 무시 (실수로 다른 곳에 떨궜을 때 브라우저가 파일 열어버리는 것 방지)
+  ['dragover','drop'].forEach(ev => window.addEventListener(ev, e => {
+    if (e.target.closest('.dropzone')) return;
+    e.preventDefault();
+  }));
+})();
+
+// ── 외부 연동 커스텀 chip 추가 ──
+function addCustomIntegration() {
+  const input = document.getElementById('int-input');
+  const v = input.value.trim();
+  if (!v) return;
+  const chips = document.getElementById('integrations');
+  const existing = [...chips.querySelectorAll('.chip')].some(c => c.textContent.trim() === v);
+  if (existing) { showToast('이미 있는 항목입니다'); input.value = ''; return; }
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'chip custom-chip selected';
+  chip.textContent = v;
+  chip.onclick = () => toggleChip(chip);
+  chips.appendChild(chip);
+  input.value = '';
+  updateProgress();
+}
+
+// ── 화면 칩 토글 / 추가 ──
+function toggleChip(el) {
+  el.classList.toggle('selected');
+  updateProgress();
+}
+function addCustomChip() {
+  const input = document.getElementById('chip-input');
+  const v = input.value.trim();
+  if (!v) return;
+  const chips = document.getElementById('screens');
+  // 중복 검사
+  const existing = [...chips.querySelectorAll('.chip')].some(c => c.textContent.trim() === v);
+  if (existing) {
+    showToast('이미 있는 화면입니다', 'warn');
+    input.value = '';
+    return;
+  }
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'chip custom-chip selected';
+  chip.textContent = v;
+  chip.onclick = () => toggleChip(chip);
+  chips.appendChild(chip);
+  input.value = '';
+  updateProgress();
+}
+
+// ── 진행도 ──
+function updateProgress() {
+  // 필수 5개
+  const summary = document.getElementById('f-summary').value.trim();
+  const user = document.getElementById('f-user').value.trim();
+  const problem = document.getElementById('f-problem').value.trim();
+  const features = [...document.querySelectorAll('#features input')].some(i => i.value.trim());
+  const screens = document.querySelectorAll('#screens .chip.selected').length > 0;
+
+  const filled = [summary, user, problem, features, screens].filter(Boolean).length;
+  document.getElementById('filled').textContent = filled;
+  document.getElementById('btn-generate').disabled = filled < 5;
+
+  // 선택 5개 (advanced)
+  const roles = [...document.querySelectorAll('#roles .pair-row')].some(r =>
+    [...r.querySelectorAll('input')].every(i => i.value.trim()));
+  const entities = [...document.querySelectorAll('#entities .pair-row')].some(r =>
+    [...r.querySelectorAll('input')].every(i => i.value.trim()));
+  const rules = [...document.querySelectorAll('#rules input')].some(i => i.value.trim());
+  const personas = [...document.querySelectorAll('#personas .persona-card')].some(c => {
+    const head = [...c.querySelectorAll('.persona-card-head input')].some(i => i.value.trim());
+    const body = c.querySelector('textarea').value.trim();
+    return head || body;
+  });
+  const integrations = document.querySelectorAll('#integrations .chip.selected').length > 0;
+  const filledOpt = [roles, entities, rules, personas, integrations].filter(Boolean).length;
+  document.getElementById('filled-opt').textContent = filledOpt;
+}
+document.addEventListener('input', updateProgress);
+
+// ── PRD 마크다운 조립 ──
+function buildPRD() {
+  const summary = document.getElementById('f-summary').value.trim();
+  const user = document.getElementById('f-user').value.trim();
+  const problem = document.getElementById('f-problem').value.trim();
+  const features = [...document.querySelectorAll('#features input')]
+    .map(i => i.value.trim()).filter(Boolean);
+  const screens = [...document.querySelectorAll('#screens .chip.selected')]
+    .map(c => c.textContent.trim());
+  const nice = [...document.querySelectorAll('#nice input')]
+    .map(i => i.value.trim()).filter(Boolean);
+  const out = [...document.querySelectorAll('#out input')]
+    .map(i => i.value.trim()).filter(Boolean);
+
+  // Advanced
+  const roles = [...document.querySelectorAll('#roles .pair-row')].map(r => {
+    const ins = [...r.querySelectorAll('input')].map(i => i.value.trim());
+    return ins[0] && ins[1] ? { name: ins[0], desc: ins[1] } : null;
+  }).filter(Boolean);
+  const entities = [...document.querySelectorAll('#entities .pair-row')].map(r => {
+    const ins = [...r.querySelectorAll('input')].map(i => i.value.trim());
+    return ins[0] && ins[1] ? { name: ins[0], desc: ins[1] } : null;
+  }).filter(Boolean);
+  const rules = [...document.querySelectorAll('#rules input')]
+    .map(i => i.value.trim()).filter(Boolean);
+  const personas = [...document.querySelectorAll('#personas .persona-card')].map(c => {
+    const heads = [...c.querySelectorAll('.persona-card-head input')].map(i => i.value.trim());
+    const body = c.querySelector('textarea').value.trim();
+    if (!heads[0] && !heads[1] && !body) return null;
+    return { name: heads[0] || '(이름 없음)', role: heads[1] || '', scenario: body };
+  }).filter(Boolean);
+  const integrations = [...document.querySelectorAll('#integrations .chip.selected')]
+    .map(c => c.textContent.trim());
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  let md = `# PRD — ${summary}\n\n`;
+  md += `> 작성일: ${today} · Altool PRD Builder로 생성\n\n`;
+  md += `## 1. 제품 한 줄 설명\n${summary}\n\n`;
+  md += `## 2. 타겟 사용자\n${user}\n\n`;
+  md += `## 3. 해결하려는 문제\n${problem}\n\n`;
+  md += `## 4. 핵심 기능\n`;
+  features.forEach(f => md += `- ${f}\n`);
+  md += `\n## 5. 필요한 화면\n`;
+  screens.forEach(s => md += `- ${s}\n`);
+
+  if (nice.length) {
+    md += `\n## 6. 있으면 좋은 것 (Nice to Have)\n`;
+    nice.forEach(n => md += `- ${n}\n`);
+  }
+  if (out.length) {
+    md += `\n## 7. 범위 외 (Out of Scope)\n`;
+    out.forEach(o => md += `- ${o}\n`);
+  }
+
+  // ── Advanced sections (있을 때만 출력) ──
+  if (roles.length) {
+    md += `\n## 8. 사용자 역할 / 권한\n`;
+    md += `| 역할 | 권한 요약 |\n|---|---|\n`;
+    roles.forEach(r => md += `| ${r.name} | ${r.desc} |\n`);
+  }
+  if (entities.length) {
+    md += `\n## 9. 핵심 데이터 / 객체\n`;
+    md += `| 객체 | 설명 |\n|---|---|\n`;
+    entities.forEach(e => md += `| ${e.name} | ${e.desc} |\n`);
+  }
+  if (rules.length) {
+    md += `\n## 10. 비즈니스 규칙 / 예외처리\n`;
+    rules.forEach(r => md += `- ${r}\n`);
+  }
+  if (personas.length) {
+    md += `\n## 11. 페르소나 시나리오\n`;
+    personas.forEach((p, i) => {
+      md += `\n### 11.${i + 1} ${p.name}${p.role ? ` — ${p.role}` : ''}\n`;
+      if (p.scenario) md += `${p.scenario}\n`;
+    });
+  }
+  if (integrations.length) {
+    md += `\n## 12. 외부 연동 / 통합\n`;
+    integrations.forEach(it => md += `- ${it}\n`);
+  }
+
+  // ── 13. 참고 문서 (업로드된 파일이 있을 때만) ──
+  if (_files.length) {
+    md += `\n## 13. 참고 문서 (refs/)\n`;
+    md += `Claude Code는 \`prd/refs/\` 폴더의 모든 파일을 PRD와 함께 컨텍스트로 읽어서 요구사항을 보강할 것.\n\n`;
+    _files.forEach(x => {
+      const path = `prd/refs/${x.file.name}`;
+      md += `- \`${path}\``;
+      if (x.comment) md += ` — ${x.comment}`;
+      md += `\n`;
+    });
+  }
+
+  md += `\n---\n`;
+  md += `**Claude Code에게**: 이 PRD의 모든 항목을 빠짐없이 반영해서 \`/altool oneshot\` 7단계 파이프라인을 실행해줘.\n`;
+  md += `특히 "5. 필요한 화면" 목록은 라우팅·컴포넌트 구조 설계에 그대로 반영하고, "7. 범위 외" 항목은 절대 구현하지 말 것.\n`;
+  if (roles.length) md += `"8. 사용자 역할"은 인증·인가 로직과 메뉴 권한 매트릭스 설계의 기준으로 사용해.\n`;
+  if (entities.length) md += `"9. 핵심 데이터"는 schema.prisma 모델 정의의 출발점으로 사용해.\n`;
+  if (rules.length) md += `"10. 비즈니스 규칙"은 도메인 레이어 / 검증 / 테스트 케이스에 모두 반영해.\n`;
+  if (personas.length) md += `"11. 페르소나 시나리오"의 사용 흐름이 실제로 끊김 없이 가능한지 Playwright 검증 단계에서 직접 확인해.\n`;
+  if (integrations.length) md += `"12. 외부 연동"은 각 항목별로 어댑터/서비스 레이어로 격리해서 구현해.\n`;
+  if (_files.length) md += `"13. 참고 문서"의 \`prd/refs/\` 폴더 안 모든 파일을 Read 도구로 직접 열어서 같이 읽고, PRD와 충돌하면 PRD 우선·refs는 보조 컨텍스트로 사용해.\n`;
+  return md;
+}
+
+function suggestFilename() {
+  const summary = document.getElementById('f-summary').value.trim();
+  if (!summary) return 'PRD.md';
+  // 한글/영문/숫자/하이픈만, 공백은 하이픈으로 (대소문자 보존 — PRD 표기 유지)
+  const base = summary
+    .replace(/\s+/g, '-')
+    .replace(/[^\w가-힣\-]/g, '')
+    .slice(0, 40) || 'PRD';
+  // Altool(/altool oneshot)이 인식하려면 파일명에 'PRD'가 포함돼야 함
+  return /PRD/i.test(base) ? `${base}.md` : `PRD-${base}.md`;
+}
+
+// ── 생성/미리보기 ──
+let _md = '';
+function generate() {
+  _md = buildPRD();
+  document.getElementById('preview-body').textContent = _md;
+  document.getElementById('filename').value = suggestFilename();
+  // 다운로드 버튼 라벨 — 파일 첨부 여부에 따라
+  const dlBtn = document.querySelector('.preview-foot .btn-action.primary');
+  if (dlBtn) {
+    dlBtn.textContent = _files.length
+      ? `⬇ ZIP 다운로드 (.md + refs/${_files.length}개)`
+      : '⬇ 다운로드';
+  }
+  document.getElementById('preview').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closePreview() {
+  document.getElementById('preview').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closePreview();
+});
+
+// ── 다운로드 / 복사 ──
+function _trigger(href, name) {
+  const a = document.createElement('a');
+  a.href = href; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+async function downloadPRD() {
+  const rawName = (document.getElementById('filename').value.trim() || 'prd.md').replace(/[\/\\:*?"<>|]/g, '-');
+  const mdName = rawName.endsWith('.md') ? rawName : rawName + '.md';
+
+  // 첨부 파일이 없으면 단독 .md 다운로드
+  if (_files.length === 0) {
+    const blob = new Blob([_md], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    _trigger(url, mdName);
+    URL.revokeObjectURL(url);
+    showToast('다운로드 완료! prd/ 폴더에 넣어주세요');
+    return;
+  }
+
+  // 첨부 파일이 있으면 ZIP으로 묶어 다운로드
+  if (typeof JSZip === 'undefined') {
+    showToast('JSZip 로드 실패 — 인터넷 연결을 확인하세요');
+    return;
+  }
+  try {
+    const zip = new JSZip();
+    zip.file(mdName, _md);
+    const refs = zip.folder('refs');
+    for (const x of _files) {
+      refs.file(x.file.name, x.file);
+    }
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    const url = URL.createObjectURL(blob);
+    const zipName = mdName.replace(/\.md$/, '') + '.zip';
+    _trigger(url, zipName);
+    URL.revokeObjectURL(url);
+    showToast(`ZIP 다운로드 완료! 압축을 prd/ 폴더에 풀어주세요 (refs/ 자동 생성)`);
+  } catch (err) {
+    console.error(err);
+    showToast('ZIP 생성 실패: ' + err.message);
+  }
+}
+function copyPRD() {
+  navigator.clipboard.writeText(_md).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✓ 복사됨';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 복사';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+// ── Toast ──
+let _toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// 초기 진행도 계산
+updateProgress();
+</script>
+</body>
+</html>
+

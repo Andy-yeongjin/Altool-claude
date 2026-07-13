@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바이브코딩 배포 완전 가이드</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #232733;
+  --border: #2d3140;
+  --text: #e4e6ed;
+  --text2: #9ca0b0;
+  --blue: #5b8def;
+  --green: #4ade80;
+  --orange: #f59e0b;
+  --purple: #a78bfa;
+  --cyan: #22d3ee;
+  --red: #f87171;
+}
+
+body {
+  background: #000;
+  overflow: hidden;
+  font-family: 'Pretendard Variable', 'Pretendard', system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  height: 100vh;
+  height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── 16:9 Letterbox ── */
+.presentation {
+  --slide-width: min(100vw, calc(100vh * 16 / 9));
+  --slide-height: min(100vh, calc(100vw * 9 / 16));
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--slide-width);
+  height: var(--slide-height);
+  display: grid;
+  grid-template-areas: "slide";
+  overflow: hidden;
+}
+
+/* ── Slide base ── */
+.slide {
+  grid-area: slide;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 4.5% 5%;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 0;
+  contain: layout style paint;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  background: linear-gradient(160deg, #0f1117 0%, #141820 50%, #0f1117 100%);
+  position: relative;
+  overflow: hidden;
+}
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 10% 20%, rgba(91,141,239,0.04) 0%, transparent 55%),
+    radial-gradient(ellipse at 90% 80%, rgba(167,139,250,0.04) 0%, transparent 55%);
+  pointer-events: none;
+}
+.slide.active            { visibility: visible; pointer-events: auto; z-index: 1; }
+.slide.transitioning-out { visibility: visible; z-index: 1; }
+.slide.transitioning-in  { visibility: visible; z-index: 2; }
+
+/* ── Centered layout ── */
+.slide-content {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 1.5vh, 18px);
+  z-index: 1;
+  position: relative;
+}
+
+/* split-layout / prompt-slide를 포함한 슬라이드는 flex 열 전체를 채우도록 */
+.slide:has(.split-layout),
+.slide:has(.prompt-slide) {
+  justify-content: flex-start;
+  padding-top: clamp(14px, 3vh, 32px);
+  padding-bottom: clamp(14px, 3vh, 32px);
+}
+
+/* ── Prompt Slide ── */
+.prompt-slide {
+  width: 100%; flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  gap: clamp(5px, 0.9vh, 10px);
+}
+.prompt-header {
+  display: flex; flex-direction: column;
+  gap: clamp(3px, 0.45vh, 5px); flex-shrink: 0;
+}
+.prompt-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.prompt-code-box {
+  background: #080a10; border: 1px solid var(--border);
+  border-radius: clamp(7px, 0.8vw, 11px);
+  display: flex; flex-direction: column;
+  flex: 1; min-height: 0; overflow: hidden;
+}
+.pcb-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: clamp(5px,0.7vh,8px) clamp(10px,1.3vw,15px);
+  border-bottom: 1px solid var(--border);
+  background: rgba(91,141,239,0.06); flex-shrink: 0;
+}
+.pcb-label { font-size: clamp(0.58rem,0.84vw,0.72rem); color: var(--blue); font-weight: 600; }
+.pcb-copy {
+  background: rgba(91,141,239,0.1); border: 1px solid rgba(91,141,239,0.35);
+  color: var(--blue); font-size: clamp(0.58rem,0.82vw,0.7rem);
+  padding: clamp(2px,0.32vh,4px) clamp(9px,1.1vw,13px);
+  border-radius: 5px; cursor: pointer; font-family: inherit; font-weight: 700;
+  transition: all 0.18s; flex-shrink: 0; pointer-events: auto;
+}
+.pcb-copy:hover { background: rgba(91,141,239,0.22); }
+.pcb-copy.copied { border-color: var(--green); color: var(--green); background: rgba(74,222,128,0.1); }
+.pcb-scroll {
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding: clamp(8px,1.1vh,13px) clamp(11px,1.4vw,16px);
+  font-family: 'Fira Code', monospace;
+  font-size: clamp(0.57rem,0.86vw,0.74rem); line-height: 1.72;
+  color: var(--text2); white-space: pre-wrap; word-break: break-word;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  pointer-events: auto;
+}
+.pcb-scroll::-webkit-scrollbar { width: 4px; }
+.pcb-scroll::-webkit-scrollbar-track { background: transparent; }
+.pcb-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.pcb-ph { color: var(--orange); font-weight: 700; }
+.pcb-strong { color: var(--text); }
+
+/* ── Split layout (text | screenshot) ── */
+.split-layout {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: clamp(12px, 2vw, 24px);
+  z-index: 1;
+  position: relative;
+}
+.split-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1.1vh, 13px);
+  min-width: 0;
+  min-height: 0;
+  justify-content: center;
+  overflow: hidden;
+}
+.split-right {
+  flex: 0 0 50%;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+
+/* ── Screenshot frame ── */
+.screenshot {
+  border-radius: clamp(6px, 0.75vw, 11px);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  background: var(--surface2);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+  cursor: zoom-in;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  display: block;
+}
+.screenshot:hover { transform: scale(1.018); box-shadow: 0 10px 36px rgba(0,0,0,0.65); }
+.screenshot img { display: block; width: 100%; height: auto; }
+.screenshot-caption { font-size: clamp(0.56rem, 0.82vw, 0.72rem); color: var(--text2); text-align: center; opacity: 0.65; flex-shrink: 0; }
+
+/* split-right 전용: 이미지가 높이를 채우도록 */
+.split-right .screenshot { flex: 1; min-height: 0; }
+.split-right .screenshot img { height: 100%; object-fit: cover; }
+
+/* ── Lightbox ── */
+.lightbox {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.95);
+  display: none; align-items: center; justify-content: center;
+  z-index: 2000; cursor: zoom-out; padding: 32px;
+  animation: lbFade 0.2s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.lightbox.open { display: flex; }
+.lightbox img {
+  max-width: 90vw; max-height: 90vh;
+  border-radius: 10px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+  object-fit: contain;
+  cursor: zoom-out;
+}
+.lightbox-close {
+  position: fixed; top: 18px; right: 22px;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+  color: #fff; font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s; z-index: 2001;
+}
+.lightbox-close:hover { background: rgba(255,255,255,0.18); }
+@keyframes lbFade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── Typography ── */
+.slide-content h1 {
+  font-size: clamp(1.8rem, 4.2vw, 4rem);
+  font-weight: 800; line-height: 1.15; text-align: center;
+}
+.slide-content h2 {
+  font-size: clamp(1.3rem, 2.9vw, 2.5rem);
+  font-weight: 700; line-height: 1.2; text-align: center;
+}
+.split-left h2 {
+  font-size: clamp(1.05rem, 2.1vw, 1.9rem);
+  font-weight: 700; line-height: 1.2; text-align: left;
+}
+.slide-content p { font-size: clamp(0.78rem, 1.6vw, 1.3rem); line-height: 1.65; color: var(--text2); text-align: center; }
+.slide-content p strong { color: var(--text); }
+
+/* ── Gradient text ── */
+.gradient-text   { background: linear-gradient(135deg, #fff 0%, var(--text2) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.gradient-blue   { background: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.gradient-green  { background: linear-gradient(135deg, var(--green) 0%, var(--cyan) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+/* ── Role badge ── */
+.role-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: clamp(3px, 0.45vh, 6px) clamp(8px, 1.2vw, 15px);
+  border-radius: 100px; font-size: clamp(0.58rem, 0.95vw, 0.84rem);
+  font-weight: 700; letter-spacing: 0.3px; flex-shrink: 0;
+}
+.role-badge.human  { background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.3); color: var(--purple); }
+.role-badge.ai     { background: rgba(91,141,239,0.12);  border: 1px solid rgba(91,141,239,0.3);  color: var(--blue); }
+.role-badge.auto   { background: rgba(245,158,11,0.12);  border: 1px solid rgba(245,158,11,0.3);  color: var(--orange); }
+.role-badge.done   { background: rgba(74,222,128,0.12);  border: 1px solid rgba(74,222,128,0.3);  color: var(--green); }
+
+/* ── Step indicator ── */
+.step-indicator {
+  display: inline-flex; align-items: center;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 100px; padding: 2px 10px;
+  font-size: clamp(0.56rem, 0.85vw, 0.74rem); color: var(--text2); font-weight: 600;
+}
+
+.badge-row      { display: flex; align-items: center; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.badge-row-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* ── Card list ── */
+.card-list { width: 100%; display: flex; flex-direction: column; gap: clamp(4px, 0.7vh, 8px); }
+.card-item {
+  display: flex; align-items: flex-start;
+  gap: clamp(7px, 0.9vw, 13px);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: clamp(6px, 0.75vw, 11px);
+  padding: clamp(7px, 1.05vh, 13px) clamp(10px, 1.4vw, 17px);
+}
+.card-item .icon { font-size: clamp(0.85rem, 1.4vw, 1.25rem); flex-shrink: 0; line-height: 1.4; }
+.card-item .text { flex: 1; }
+.card-item .text strong { display: block; font-size: clamp(0.72rem, 1.28vw, 1.05rem); font-weight: 700; color: var(--text); margin-bottom: 1px; }
+.card-item .text span { font-size: clamp(0.62rem, 0.98vw, 0.84rem); color: var(--text2); line-height: 1.5; }
+
+/* ── Warn / Danger ── */
+.warn-box, .danger-box {
+  display: flex; align-items: flex-start; gap: 7px;
+  border-radius: 8px; padding: clamp(6px, 0.9vh, 11px) clamp(9px, 1.2vw, 14px); width: 100%;
+}
+.warn-box   { background: rgba(245,158,11,0.07);  border: 1px solid rgba(245,158,11,0.22); }
+.danger-box { background: rgba(248,113,113,0.07); border: 1px solid rgba(248,113,113,0.22); }
+.warn-box .wi, .danger-box .di { font-size: clamp(0.78rem, 1.15vw, 0.98rem); flex-shrink: 0; margin-top: 1px; }
+.warn-box .wt, .danger-box .dt { font-size: clamp(0.6rem, 0.98vw, 0.84rem); color: var(--text2); line-height: 1.55; }
+.warn-box .wt strong { color: var(--orange); }
+.danger-box .dt strong { color: var(--red); }
+
+/* ── Prompt box ── */
+.prompt-box { background: #0d0f14; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; width: 100%; }
+.prompt-box .pb-header { display: flex; align-items: center; gap: 7px; padding: 6px 12px; background: rgba(91,141,239,0.06); border-bottom: 1px solid var(--border); font-size: clamp(0.56rem, 0.85vw, 0.74rem); color: var(--blue); font-weight: 600; }
+.prompt-box .pb-body { padding: clamp(7px, 1vh, 12px) clamp(10px, 1.3vw, 14px); font-size: clamp(0.62rem, 0.98vw, 0.84rem); color: var(--text2); line-height: 1.65; text-align: center; }
+.prompt-box .pb-body .ph { color: var(--orange); font-family: 'Fira Code', monospace; font-weight: 700; }
+.prompt-box .pb-steps { display: flex; flex-wrap: wrap; gap: 5px; padding: 6px 12px; border-top: 1px solid var(--border); justify-content: center; }
+.prompt-box .pb-step { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; font-size: clamp(0.56rem, 0.78vw, 0.68rem); color: var(--text2); }
+
+/* ── Overview grid ── */
+.overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(8px, 1.2vw, 15px); width: 100%; }
+.overview-part { background: var(--surface); border: 1px solid var(--border); border-radius: clamp(8px, 0.85vw, 13px); padding: clamp(10px, 1.5vh, 17px) clamp(10px, 1.3vw, 17px); }
+.overview-part .part-header { display: flex; align-items: center; gap: 7px; margin-bottom: clamp(6px, 0.9vh, 11px); padding-bottom: clamp(5px, 0.75vh, 9px); border-bottom: 1px solid var(--border); }
+.overview-part .part-title { font-size: clamp(0.75rem, 1.2vw, 1rem); font-weight: 700; }
+.overview-part .part-steps { display: flex; flex-direction: column; gap: 4px; }
+.overview-part .part-step { display: flex; align-items: center; gap: 6px; font-size: clamp(0.62rem, 0.92vw, 0.8rem); color: var(--text2); }
+.overview-part .part-step .ps-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Legend ── */
+.legend-row { display: flex; gap: clamp(8px, 1.5vw, 18px); justify-content: center; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: clamp(0.62rem, 0.95vw, 0.8rem); color: var(--text2); }
+
+/* ── Section break ── */
+.section-break { text-align: center; }
+.section-num { font-size: clamp(0.68rem, 0.98vw, 0.85rem); font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--text2); margin-bottom: 4px; }
+.section-title-big { font-size: clamp(3.5rem, 8vw, 8rem); font-weight: 800; line-height: 1; margin-bottom: 7px; }
+.section-sub { font-size: clamp(0.9rem, 1.8vw, 1.55rem); color: var(--text2); font-weight: 500; }
+
+/* ── Checklist ── */
+.checklist { width: 100%; display: flex; flex-direction: column; gap: clamp(4px, 0.7vh, 8px); }
+.check-row { display: flex; align-items: center; gap: clamp(7px, 1vw, 13px); background: var(--surface); border: 1px solid var(--border); border-radius: clamp(6px, 0.7vw, 10px); padding: clamp(6px, 0.95vh, 12px) clamp(10px, 1.3vw, 15px); }
+.check-icon { font-size: clamp(0.78rem, 1.15vw, 0.96rem); flex-shrink: 0; }
+.check-text { font-size: clamp(0.7rem, 1.15vw, 0.94rem); color: var(--text); font-weight: 600; flex: 1; }
+.check-badge { margin-left: auto; font-size: clamp(0.52rem, 0.76vw, 0.66rem); padding: 2px 7px; border-radius: 4px; font-weight: 700; flex-shrink: 0; }
+.check-badge.h  { background: rgba(167,139,250,0.12); color: var(--purple); }
+.check-badge.a  { background: rgba(91,141,239,0.12);  color: var(--blue); }
+.check-badge.ha { background: rgba(74,222,128,0.12);  color: var(--green); }
+
+/* ── Build effects ── */
+[data-step] { opacity: 0; transform: translateY(15px); transition: opacity 0.4s ease, transform 0.4s ease; pointer-events: none; }
+[data-step].visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.build.slide-up          { transform: translateY(30px); }
+.build.slide-up.visible  { transform: translateY(0); }
+.build.scale-in          { transform: scale(0.87); }
+.build.scale-in.visible  { transform: scale(1); }
+
+/* ── Nav hint ── */
+.nav-hint { position: absolute; bottom: clamp(9px, 1.8vh, 18px); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.2); font-size: clamp(0.55rem, 0.78vw, 0.7rem); white-space: nowrap; pointer-events: none; }
+
+/* ── Controls ── */
+.presentation-controls { position: fixed; bottom: 0; left: 0; right: 0; z-index: 500; }
+.progress-bar { height: 4px; background: rgba(255,255,255,0.07); cursor: pointer; transition: height 0.2s; }
+.progress-bar:hover { height: 8px; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--blue), var(--cyan)); transition: width 0.3s ease; width: 0%; }
+.slide-counter { position: fixed; bottom: 12px; right: 16px; color: rgba(255,255,255,0.3); font-size: 13px; font-variant-numeric: tabular-nums; pointer-events: none; }
+.transition-label { position: fixed; bottom: 12px; left: 16px; color: rgba(255,255,255,0.18); font-size: 11px; pointer-events: none; font-family: 'Fira Code', monospace; }
+
+/* ── Speaker notes ── */
+.speaker-notes { display: none; }
+body.show-notes .slide.active .speaker-notes { display: block; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.93); color: #eee; padding: 1em 2em; font-size: 0.9em; max-height: 25vh; overflow-y: auto; z-index: 1000; border-top: 2px solid #ffd700; }
+</style>
+</head>
+<body>
+
+<div class="presentation" id="presentation">
+
+  <!-- ══════════ 1 · 타이틀 ══════════ -->
+  <section class="slide active" id="slide-1" aria-roledescription="slide">
+    <div class="slide-content" style="max-width:74%;">
+      <div class="role-badge done" data-step="0">🚀 배포 완전 가이드</div>
+      <h1 class="gradient-text" data-step="1">바이브코딩을 위한<br>배포 완전 가이드</h1>
+      <h3 data-step="2" style="color:var(--cyan);font-size:clamp(0.88rem,1.85vw,1.45rem);font-weight:500;">NeonDB + Vercel — 프롬프트 복사만으로 끝내기</h3>
+      <div data-step="3" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:clamp(8px,1.2vh,13px) clamp(15px,2vw,24px);">
+        <p style="font-size:clamp(0.72rem,1.28vw,1rem);"><strong>전제:</strong> Next.js 프로젝트 로컬 개발이 완료된 상태</p>
+      </div>
+    </div>
+    <div class="nav-hint">→ 방향키로 이동 &nbsp;·&nbsp; S 발표자 노트 &nbsp;·&nbsp; F 전체화면 &nbsp;·&nbsp; T 전환 효과</div>
+    <aside class="speaker-notes">대상: 코드를 작성하지 않지만 프로젝트 배포가 필요한 분들. 총 2파트, 약 20~30분 소요.</aside>
+  </section>
+
+  <!-- ══════════ 2 · 전체 흐름 ══════════ -->
+  <section class="slide" id="slide-2" aria-roledescription="slide">
+    <div class="slide-content" style="max-width:88%;">
+      <div data-step="0" style="text-align:center;">
+        <h2 class="gradient-text">전체 흐름 한눈에 보기</h2>
+        <p style="margin-top:3px;font-size:clamp(0.65rem,1vw,0.84rem);">총 2파트 · 11단계 · 약 20~30분</p>
+      </div>
+      <div class="overview-grid" data-step="1">
+        <div class="overview-part">
+          <div class="part-header"><span style="font-size:1.2em;">🗄️</span><span class="part-title" style="color:var(--green);">PART 1 · NeonDB</span></div>
+          <div class="part-steps">
+            <div class="part-step"><div class="ps-dot" style="background:var(--purple);"></div>NeonDB 가입</div>
+            <div class="part-step"><div class="ps-dot" style="background:var(--purple);"></div>프로젝트 생성</div>
+            <div class="part-step"><div class="ps-dot" style="background:var(--purple);"></div>Connection String 복사</div>
+            <div class="part-step"><div class="ps-dot" style="background:var(--blue);"></div>Claude Code로 DB 연결</div>
+            <div class="part-step"><div class="ps-dot" style="background:var(--blue);"></div>연결 확인</div>
+          </div>
+        </div>
+        <div class="overview-part">
+          <div class="part-header"><span style="font-size:1.2em;">▲</span><span class="part-title" style="color:var(--blue);">PART 2 · Vercel</span></div>
+          <div class="part-steps">
+            <div class="part-step"><div class="ps-dot" style="background:var(--purple);"></div>GitHub 저장소 생성</div>
+            <div class="part-step"><div class="ps-dot" style="background:var(--blue);"></div>Claude Code로 코드 푸시</div>
+            <div class="part-step"><div class="ps-dot" style="background:var(--purple);"></div>Vercel 가입 + Import</div>
+            <div class="part-step"><div class="ps-dot" style="background:var(--orange);"></div>첫 배포 (자동)</div>
+            <div class="part-step"><div class="ps-dot" style="background:var(--purple);"></div>환경변수 등록</div>
+            <div class="part-step"><div class="ps-dot" style="background:var(--green);"></div>배포 완료 🎉</div>
+          </div>
+        </div>
+      </div>
+      <div class="legend-row" data-step="2">
+        <div class="legend-item"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple);flex-shrink:0;"></div>👤 사람이 직접</div>
+        <div class="legend-item"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;"></div>🤖 Claude Code에게 프롬프트</div>
+        <div class="legend-item"><div style="width:8px;height:8px;border-radius:50%;background:var(--orange);flex-shrink:0;"></div>⚡ 자동 처리</div>
+      </div>
+    </div>
+    <aside class="speaker-notes">보라색=사람이 직접, 파란색=Claude Code에게 프롬프트 복사, 주황색=자동 처리됩니다.</aside>
+  </section>
+
+  <!-- ══════════ 3 · PART 1 Break ══════════ -->
+  <section class="slide" id="slide-3" aria-roledescription="slide">
+    <div class="slide-content section-break">
+      <div data-step="0">
+        <div class="section-num">PART 1</div>
+        <div class="section-title-big gradient-green">NeonDB</div>
+        <div class="section-sub">데이터베이스 연결</div>
+      </div>
+      <div data-step="1" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:clamp(7px,1.4vh,14px);">
+        <span class="role-badge human">👤 3단계 직접 작업</span>
+        <span class="role-badge ai">🤖 2단계 Claude Code</span>
+      </div>
+      <p data-step="2" style="margin-top:5px;font-size:clamp(0.65rem,1.05vw,0.88rem);">무료 플랜 · 신용카드 불필요 · PostgreSQL 호환</p>
+    </div>
+    <aside class="speaker-notes">NeonDB는 무료 PostgreSQL 호스팅 서비스입니다.</aside>
+  </section>
+
+  <!-- ══════════ 4 · NeonDB 가입 ══════════ -->
+  <section class="slide" id="slide-4" aria-roledescription="slide">
+    <div class="split-layout">
+      <div class="split-left">
+        <div class="badge-row-left" data-step="0">
+          <span class="step-indicator">PART 1 · 1/5</span>
+          <span class="role-badge human">👤 사람이 직접</span>
+        </div>
+        <h2 class="gradient-text" data-step="0">NeonDB 가입</h2>
+        <div class="card-list">
+          <div class="card-item" data-step="1">
+            <span class="icon">1️⃣</span>
+            <div class="text">
+              <strong>neon.tech 접속</strong>
+              <span>우측 상단 <strong style="color:var(--text);">Sign Up</strong> 클릭</span>
+            </div>
+          </div>
+          <div class="card-item" data-step="2">
+            <span class="icon">2️⃣</span>
+            <div class="text">
+              <strong>소셜 로그인 선택</strong>
+              <span><strong style="color:var(--text);">Continue with GitHub</strong> 또는 Google</span>
+            </div>
+          </div>
+          <div class="card-item" data-step="3" style="border-color:rgba(74,222,128,0.3);">
+            <span class="icon">✅</span>
+            <div class="text">
+              <strong style="color:var(--green);">가입 완료!</strong>
+              <span>신용카드 불필요 · 무료 플랜으로 충분</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="split-right" data-step="2">
+        <div class="screenshot" onclick="openLightbox('images/neon-1-signup.png')">
+          <img src="images/neon-1-signup.png" alt="NeonDB 회원가입" loading="lazy">
+        </div>
+        <div class="screenshot" onclick="openLightbox('images/neon-2-oauth.png')">
+          <img src="images/neon-2-oauth.png" alt="NeonDB OAuth 로그인" loading="lazy">
+        </div>
+        <p class="screenshot-caption">클릭하면 크게 볼 수 있어요</p>
+      </div>
+    </div>
+    <aside class="speaker-notes">GitHub 계정으로 소셜 로그인하면 몇 초 만에 완료됩니다.</aside>
+  </section>
+
+  <!-- ══════════ 5 · 프로젝트 생성 ══════════ -->
+  <section class="slide" id="slide-5" aria-roledescription="slide">
+    <div class="split-layout">
+      <div class="split-left">
+        <div class="badge-row-left" data-step="0">
+          <span class="step-indicator">PART 1 · 2/5</span>
+          <span class="role-badge human">👤 사람이 직접</span>
+        </div>
+        <h2 class="gradient-text" data-step="0">프로젝트 생성</h2>
+        <div class="card-list">
+          <div class="card-item" data-step="1">
+            <span class="icon">📝</span>
+            <div class="text"><strong>Project name</strong><span>프로젝트 이름 입력</span></div>
+          </div>
+          <div class="card-item" data-step="2" style="border-color:rgba(34,211,238,0.3);">
+            <span class="icon">🌏</span>
+            <div class="text">
+              <strong style="color:var(--cyan);">Region → Singapore</strong>
+              <span>AWS ap-southeast-1 · 한국에서 가장 가까운 무료 리전</span>
+            </div>
+          </div>
+          <div class="card-item" data-step="3">
+            <span class="icon">🚀</span>
+            <div class="text"><strong>Create Project 클릭</strong><span>생성 후 Connection String 화면 자동 표시</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="split-right" data-step="2">
+        <div class="screenshot" onclick="openLightbox('images/neon-3-newproject.png')">
+          <img src="images/neon-3-newproject.png" alt="NeonDB 프로젝트 생성" loading="lazy">
+        </div>
+        <p class="screenshot-caption">클릭하면 크게 볼 수 있어요</p>
+      </div>
+    </div>
+    <aside class="speaker-notes">Singapore 리전을 꼭 선택하세요. 응답 속도에 직접 영향을 줍니다.</aside>
+  </section>
+
+  <!-- ══════════ 6 · Connection String 복사 ══════════ -->
+  <section class="slide" id="slide-6" aria-roledescription="slide">
+    <div class="split-layout">
+      <div class="split-left">
+        <div class="badge-row-left" data-step="0">
+          <span class="step-indicator">PART 1 · 3/5</span>
+          <span class="role-badge human">👤 사람이 직접</span>
+        </div>
+        <h2 class="gradient-text" data-step="0">Connection String 복사</h2>
+        <p data-step="0" style="text-align:left;font-size:clamp(0.72rem,1.15vw,0.94rem);"><strong>URL 두 개</strong>를 순서대로 복사합니다</p>
+        <div class="card-list">
+          <div class="card-item" data-step="1" style="border-color:rgba(74,222,128,0.35);">
+            <span class="icon">①</span>
+            <div class="text">
+              <strong style="color:var(--green);">Connection pooling ON → Copy</strong>
+              <span>POOLED URL 보관 — 앱 런타임용</span>
+            </div>
+          </div>
+          <div class="card-item" data-step="2" style="border-color:rgba(34,211,238,0.35);">
+            <span class="icon">②</span>
+            <div class="text">
+              <strong style="color:var(--cyan);">Connection pooling OFF → Copy</strong>
+              <span>DIRECT URL 보관 — 마이그레이션용</span>
+            </div>
+          </div>
+          <div class="danger-box" data-step="3" style="margin-top:2px;">
+            <span class="di">🔒</span>
+            <div class="dt"><strong>URL에 비밀번호 포함!</strong> 외부에 절대 공유 금지</div>
+          </div>
+        </div>
+      </div>
+      <div class="split-right" data-step="1">
+        <div class="screenshot" onclick="openLightbox('images/neon-4-connection.png')">
+          <img src="images/neon-4-connection.png" alt="NeonDB Connection String" loading="lazy">
+        </div>
+        <p class="screenshot-caption">토글로 Pooled ↔ Direct 전환</p>
+      </div>
+    </div>
+    <aside class="speaker-notes">두 URL의 차이는 호스트에 -pooler가 붙는지뿐입니다.</aside>
+  </section>
+
+  <!-- ══════════ 7 · Claude Code에게 DB 연결 ══════════ -->
+  <section class="slide" id="slide-7" aria-roledescription="slide">
+    <div class="prompt-slide">
+      <div class="prompt-header" data-step="0">
+        <div class="badge-row-left"><span class="step-indicator">PART 1 · 4/5</span><span class="role-badge ai">🤖 Claude Code에게 프롬프트</span></div>
+        <h2 class="gradient-text" style="text-align:left;font-size:clamp(1.1rem,2.15vw,1.95rem);">Claude Code에게 DB 연결 시키기</h2>
+        <p style="text-align:left;font-size:clamp(0.62rem,0.95vw,0.82rem);color:var(--text2);"><span class="pcb-ph">{{POOLED_URL}}</span> 과 <span class="pcb-ph">{{DIRECT_URL}}</span> 두 곳만 3단계에서 복사한 값으로 교체 후 붙여넣기</p>
+      </div>
+      <div class="prompt-wrap" data-step="1">
+        <div class="prompt-code-box">
+          <div class="pcb-header">
+            <span class="pcb-label">🤖 Claude Code 대화창에 붙여넣기</span>
+            <button class="pcb-copy" onclick="copyPrompt(this)">📋 복사</button>
+          </div>
+          <div class="pcb-scroll">constitution.md를 읽고 모든 원칙을 준수해줘. 특히 보안: API 키/DB 자격증명은 코드에 하드코딩 금지, .env 로만 관리, .gitignore에 .env 포함 확인.
+
+NeonDB(PostgreSQL)를 이 프로젝트에 Prisma ORM으로 연결해줘. 현재 이 프로젝트는 sqlite로 개발 중일 가능성이 높으니, <span class="pcb-strong">기존 sqlite 스키마와 모델 정의를 반드시 먼저 확인하고 그대로 이관</span>해야 한다. 아래 절차를 순서대로 수행해:
+
+0. 현재 상태 점검 (가장 먼저)
+   - prisma/schema.prisma 가 있는지 확인하고 있으면 datasource provider, model 정의를 모두 읽어줘
+   - 코드 내에서 prisma.* 호출이 어떤 모델·필드를 사용하는지 grep으로 파악
+   - 위 두 가지를 본 뒤 이관 계획을 한 줄로 요약해서 알려줘 (어떤 모델 N개를 어떻게 옮길지)
+
+1. 의존성 확인
+   - prisma (devDependency), @prisma/client 설치 여부 확인 (없으면 설치)
+   - prisma/schema.prisma 가 이미 있으면 그걸 기준으로 작업, 없으면 npx prisma init
+
+2. .env 파일에 아래 두 환경변수 작성 (이미 있으면 갱신):
+   DATABASE_URL="<span class="pcb-ph">{{POOLED_URL}}</span>"
+   DIRECT_URL="<span class="pcb-ph">{{DIRECT_URL}}</span>"
+   기존에 sqlite용 DATABASE_URL="file:./dev.db" 가 있었다면 위 값으로 교체.
+
+3. prisma/schema.prisma 수정:
+   - datasource db 블록의 provider 를 "postgresql"로 (현재 "sqlite"였다면 교체)
+   - url을 env("DATABASE_URL")로 설정
+   - 같은 블록에 directUrl = env("DIRECT_URL") 추가
+   - <span class="pcb-strong">기존 model 정의는 가능한 그대로 유지</span>. sqlite ↔ postgresql 간 타입 차이 부분만 PostgreSQL에 맞게 미세 조정
+   - 정의된 model이 하나도 없을 때만, 메모리/파일/JSON으로 관리되던 데이터 구조를 분석해서 새로 모델 정의
+
+4. 기존 sqlite 마이그레이션 정리:
+   - prisma/migrations/ 폴더가 sqlite 기준으로 만들어져 있다면 PostgreSQL과 호환되지 않으므로 폴더 통째로 삭제
+   - 로컬 dev.db, *.db, *.db-journal 가 .gitignore에 포함되어 있는지 확인 (없으면 추가)
+
+5. 마이그레이션 실행:
+   - npx prisma migrate dev --name init
+   - npx prisma generate
+
+6. lib/prisma.ts 싱글톤 클라이언트 생성 — Next.js dev 모드 hot reload 시
+   연결 풀 누수 방지 패턴 적용 (globalThis 캐싱). 이미 있으면 건너뜀.
+
+7. 기존에 메모리/파일/sqlite로 데이터를 읽고 쓰던 부분을 모두 Prisma 클라이언트
+   호출로 교체. Server Actions / Route Handlers 안에서만 사용하고,
+   클라이언트 컴포넌트에는 절대 import하지 말 것.
+
+8. .gitignore에 .env, .env*.local 포함 확인 (없으면 추가).
+
+9. npm run build로 프로덕션 빌드 검증.
+
+작업 후 어떤 파일이 추가/변경됐고, sqlite에서 가져온 모델이 무엇인지, 새로 추가한 모델이 무엇인지 요약해줘.</div>
+        </div>
+      </div>
+    </div>
+    <aside class="speaker-notes">URL 두 개만 교체하면 됩니다. 복사 버튼으로 전체 프롬프트를 복사해 Claude Code에 붙여넣으세요.</aside>
+  </section>
+
+  <!-- ══════════ 8 · DB 연결 확인 ══════════ -->
+  <section class="slide" id="slide-8" aria-roledescription="slide">
+    <div class="split-layout">
+      <div class="split-left">
+        <div class="badge-row-left" data-step="0">
+          <span class="step-indicator">PART 1 · 5/5</span>
+          <span class="role-badge ai">🤖 Claude Code에게 프롬프트</span>
+        </div>
+        <h2 class="gradient-text" data-step="0" style="text-align:left;font-size:clamp(1.1rem,2.15vw,1.95rem);">DB 연결 확인 프롬프트</h2>
+        <div class="prompt-code-box" data-step="1" style="flex:1;min-height:0;">
+          <div class="pcb-header">
+            <span class="pcb-label">🤖 위 작업 완료 후 바로 이어서 붙여넣기</span>
+            <button class="pcb-copy" onclick="copyPrompt(this)">📋 복사</button>
+          </div>
+          <div class="pcb-scroll">방금 연결한 NeonDB가 정상 동작하는지 다음 절차로 검증하고 결과를 표로 보고해줘:
+
+1. 연결 ping
+   - lib/prisma.ts (또는 동일한 싱글톤)을 import한 임시 스크립트
+     scripts/check-db.ts 를 만들어서
+     await prisma.$queryRaw`SELECT 1 as ok` 실행 → 결과 출력
+   - tsx 또는 ts-node로 실행: npx tsx scripts/check-db.ts
+
+2. 마이그레이션 상태 점검
+   - npx prisma migrate status 실행해서
+     "Database schema is up to date" 가 나오는지 확인
+
+3. 모델별 row count
+   - schema.prisma 안의 모든 model에 대해 prisma.&lt;model&gt;.count() 를 호출해서
+     | 모델명 | row count | 비고 | 형식의 표로 정리
+
+4. 임시 INSERT/SELECT/DELETE 라운드트립
+   - 가장 단순한 모델 하나(예: User 같은 단일 PK 모델)를 골라
+     테스트용 row 1개 insert → 같은 조건으로 select 해서 일치 확인 → delete
+   - 모델이 없으면 4번은 "스킵: 적절한 모델 없음"으로 보고
+
+5. 종료 정리
+   - scripts/check-db.ts 는 작업이 끝나면 삭제
+   - 어떤 단계에서 어떤 출력이 나왔는지 그대로 보고
+   - 실패가 있다면 에러 코드(P1001/P1003/P2021 등)와 원인 한 줄
+
+마지막에 <span class="pcb-ph">✅ 연결 정상 / ⚠️ 부분 정상 / ❌ 실패</span> 중 하나로 결론 내려줘.</div>
+        </div>
+      </div>
+      <div class="split-right" data-step="0">
+        <div class="screenshot" onclick="openLightbox('images/neon-6-tables.png')">
+          <img src="images/neon-6-tables.png" alt="NeonDB Tables" loading="lazy">
+        </div>
+        <p class="screenshot-caption">완료 후 NeonDB Tables 탭에서 확인</p>
+      </div>
+    </div>
+    <aside class="speaker-notes">✅ 연결 정상이 나오면 PART 1 완료입니다!</aside>
+  </section>
+
+  <!-- ══════════ 9 · PART 2 Break ══════════ -->
+  <section class="slide" id="slide-9" aria-roledescription="slide">
+    <div class="slide-content section-break">
+      <div data-step="0">
+        <div class="section-num">PART 2</div>
+        <div class="section-title-big gradient-blue">Vercel</div>
+        <div class="section-sub">GitHub 푸시 + 배포</div>
+      </div>
+      <div data-step="1" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:clamp(7px,1.4vh,14px);">
+        <span class="role-badge human">👤 3단계 직접 작업</span>
+        <span class="role-badge ai">🤖 1단계 Claude Code</span>
+        <span class="role-badge auto">⚡ 1단계 자동</span>
+      </div>
+      <p data-step="2" style="margin-top:5px;font-size:clamp(0.65rem,1.05vw,0.88rem);">GitHub push 한 번 → 이후 자동 재배포</p>
+    </div>
+    <aside class="speaker-notes">한 번 설정해두면 이후 코드 수정 후 push만 하면 자동 배포됩니다.</aside>
+  </section>
+
+  <!-- ══════════ 10 · GitHub 저장소 ══════════ -->
+  <section class="slide" id="slide-10" aria-roledescription="slide">
+    <div class="split-layout">
+      <div class="split-left">
+        <div class="badge-row-left" data-step="0">
+          <span class="step-indicator">PART 2 · 1/6</span>
+          <span class="role-badge human">👤 사람이 직접</span>
+        </div>
+        <h2 class="gradient-text" data-step="0">GitHub 저장소 만들기</h2>
+        <div class="card-list">
+          <div class="card-item" data-step="1">
+            <span class="icon">1️⃣</span>
+            <div class="text"><strong>github.com → + → New repository</strong><span>이름 입력 · Public/Private 무관</span></div>
+          </div>
+          <div class="warn-box" data-step="2">
+            <span class="wi">⚠️</span>
+            <div class="wt"><strong>README / .gitignore / license 전부 체크 해제!</strong> 빈 저장소로 만들어야 충돌 없음</div>
+          </div>
+          <div class="card-item" data-step="3">
+            <span class="icon">🔗</span>
+            <div class="text">
+              <strong>저장소 URL 복사해두기</strong>
+              <span style="color:var(--cyan);font-family:'Fira Code',monospace;font-size:0.82em;">https://github.com/yourname/my-app.git</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="split-right" data-step="1">
+        <div class="screenshot" onclick="openLightbox('images/vercel-2-createrepo.png')">
+          <img src="images/vercel-2-createrepo.png" alt="GitHub 저장소 생성" loading="lazy">
+        </div>
+        <div class="screenshot" onclick="openLightbox('images/vercel-3-repourl.png')">
+          <img src="images/vercel-3-repourl.png" alt="저장소 URL" loading="lazy">
+        </div>
+        <p class="screenshot-caption">생성 후 이 URL을 복사해두세요</p>
+      </div>
+    </div>
+    <aside class="speaker-notes">빈 저장소로 만들지 않으면 push 시 충돌이 발생합니다.</aside>
+  </section>
+
+  <!-- ══════════ 11 · Claude Code에게 푸시 ══════════ -->
+  <section class="slide" id="slide-11" aria-roledescription="slide">
+    <div class="prompt-slide">
+      <div class="prompt-header" data-step="0">
+        <div class="badge-row-left"><span class="step-indicator">PART 2 · 2/6</span><span class="role-badge ai">🤖 Claude Code에게 프롬프트</span></div>
+        <h2 class="gradient-text" style="text-align:left;font-size:clamp(1.1rem,2.15vw,1.95rem);">Claude Code에게 푸시 시키기</h2>
+        <p style="text-align:left;font-size:clamp(0.62rem,0.95vw,0.82rem);color:var(--text2);"><span class="pcb-ph">{{REPO_URL}}</span> 만 10단계에서 복사한 저장소 URL로 교체 후 붙여넣기</p>
+      </div>
+      <div class="prompt-wrap" data-step="1">
+        <div class="prompt-code-box">
+          <div class="pcb-header">
+            <span class="pcb-label">🤖 Claude Code 대화창에 붙여넣기</span>
+            <button class="pcb-copy" onclick="copyPrompt(this)">📋 복사</button>
+          </div>
+          <div class="pcb-scroll">constitution.md를 읽고 모든 원칙 준수. 특히 보안: .env가 .gitignore에 포함되어 있는지 반드시 먼저 확인하고, 자격증명이 한 번도 커밋된 적이 없는지 git log로 검증해줘.
+
+이 프로젝트를 GitHub에 푸시할 거야. 아래 절차를 순서대로 수행해:
+
+1. .gitignore 점검:
+   - .env, .env*.local, node_modules, .next, .vercel 가 포함되어 있는지 확인
+   - 누락된 항목은 추가
+
+2. .env.example 파일 생성:
+   - 현재 .env에 있는 모든 키를 가져오되 값은 모두 빈 문자열로
+   - 각 키 위에 한 줄 주석으로 어디서 받는 값인지 표기
+   - (예: # NeonDB → Connection pooling string)
+
+3. Vercel 배포 준비:
+   - package.json scripts.build를 "prisma generate && next build" 로 수정
+     (Prisma 사용 중일 때만. Drizzle 등 다른 ORM이면 그에 맞게)
+   - postinstall 스크립트가 필요하면 "prisma generate" 추가
+   - next.config.js / next.config.ts 검토 — Vercel에서 깨질 만한 설정 없는지 확인
+
+4. README.md 갱신 (없으면 생성):
+   - 프로젝트 한 줄 설명
+   - 로컬 실행 방법 (npm install → .env.example을 .env로 복사 후 값 채우기 → npm run dev)
+   - 사용 중인 환경변수 목록과 출처
+
+5. git 초기화 및 푸시:
+   - 현재 디렉터리가 git 저장소가 아니면 git init
+   - 기본 브랜치를 main으로 설정 (git branch -M main)
+   - origin 추가: git remote add origin <span class="pcb-ph">{{REPO_URL}}</span>
+   - 첫 커밋 생성 후 git push -u origin main
+
+6. 푸시 후 git status로 작업 트리 깨끗한지 확인하고,
+   .env 파일이 절대 트래킹되지 않은 상태인지 git ls-files로 검증해줘.
+
+작업 종료 후 어떤 파일이 추가/변경됐는지, .env가 안전한지 한 줄로 보고해줘.</div>
+        </div>
+      </div>
+      <div class="danger-box" data-step="2" style="flex-shrink:0;margin-top:clamp(5px,0.8vh,9px);">
+        <span class="di">🚨</span>
+        <div class="dt"><strong>필수 확인!</strong> push 후 GitHub 저장소 새로고침 → <strong>.env 파일이 보이지 않는지</strong> 눈으로 직접 확인하세요.</div>
+      </div>
+    </div>
+    <aside class="speaker-notes">.env 파일이 GitHub에 올라가면 비밀번호가 노출됩니다. 반드시 눈으로 확인하세요.</aside>
+  </section>
+
+  <!-- ══════════ 12 · Vercel 가입 + Import ══════════ -->
+  <section class="slide" id="slide-12" aria-roledescription="slide">
+    <div class="split-layout">
+      <div class="split-left">
+        <div class="badge-row-left" data-step="0">
+          <span class="step-indicator">PART 2 · 3/6</span>
+          <span class="role-badge human">👤 사람이 직접</span>
+        </div>
+        <h2 class="gradient-text" data-step="0">Vercel 가입 + Import</h2>
+        <div class="card-list">
+          <div class="card-item" data-step="1">
+            <span class="icon">1️⃣</span>
+            <div class="text"><strong>vercel.com → Continue with GitHub</strong><span>가입+저장소 연결 한 번에 완료</span></div>
+          </div>
+          <div class="card-item" data-step="2">
+            <span class="icon">2️⃣</span>
+            <div class="text"><strong>Add New → Project → Import</strong><span>저장소 옆 Import 클릭</span></div>
+          </div>
+          <div class="warn-box" data-step="3">
+            <span class="wi">⚠️</span>
+            <div class="wt">저장소 목록에 없으면 → <strong>Configure GitHub App</strong> → Repository access 추가 → 다음 슬라이드 참고</div>
+          </div>
+        </div>
+      </div>
+      <div class="split-right" data-step="1">
+        <div class="screenshot" onclick="openLightbox('images/vercel-3-signup.png')">
+          <img src="images/vercel-3-signup.png" alt="Vercel 로그인" loading="lazy">
+        </div>
+        <div class="screenshot" onclick="openLightbox('images/vercel-4-addnew.png')">
+          <img src="images/vercel-4-addnew.png" alt="Vercel Add New" loading="lazy">
+        </div>
+        <p class="screenshot-caption">클릭하면 크게 볼 수 있어요</p>
+      </div>
+    </div>
+    <aside class="speaker-notes">조직 저장소라면 조직 계정의 Configure를 눌러야 합니다.</aside>
+  </section>
+
+  <!-- ══════════ 12b · GitHub App 권한 ══════════ -->
+  <section class="slide" id="slide-12b" aria-roledescription="slide">
+    <div class="slide-content" style="max-width:88%;">
+      <div class="badge-row" data-step="0">
+        <span class="step-indicator">PART 2 · 3/6 보충</span>
+        <span class="role-badge human">👤 저장소가 목록에 안 보일 때</span>
+      </div>
+      <h2 class="gradient-text" data-step="0">GitHub App 권한 추가</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:clamp(7px,1.1vw,13px);width:100%;" data-step="1">
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:center;">
+          <div class="screenshot" onclick="openLightbox('images/vercel-5-import.png')" style="width:100%;">
+            <img src="images/vercel-5-import.png" alt="Configure GitHub App 링크" loading="lazy">
+          </div>
+          <p style="font-size:clamp(0.56rem,0.82vw,0.72rem);color:var(--text2);text-align:center;">① Configure 링크 클릭</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:center;">
+          <div class="screenshot" onclick="openLightbox('images/vercel-5b-configure.png')" style="width:100%;">
+            <img src="images/vercel-5b-configure.png" alt="Configure 클릭" loading="lazy">
+          </div>
+          <p style="font-size:clamp(0.56rem,0.82vw,0.72rem);color:var(--text2);text-align:center;">② 본인 계정 Configure</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:center;">
+          <div class="screenshot" onclick="openLightbox('images/vercel-5c-repoaccess.png')" style="width:100%;">
+            <img src="images/vercel-5c-repoaccess.png" alt="Repository access" loading="lazy">
+          </div>
+          <p style="font-size:clamp(0.56rem,0.82vw,0.72rem);color:var(--text2);text-align:center;">③ 저장소 추가 → Save</p>
+        </div>
+      </div>
+      <div class="warn-box" data-step="2" style="max-width:680px;width:100%;">
+        <span class="wi">⚠️</span>
+        <div class="wt">Save 후 Vercel Import 화면으로 돌아와 <strong>새로고침</strong> → 저장소가 목록에 표시됩니다</div>
+      </div>
+    </div>
+    <aside class="speaker-notes">조직 저장소라면 조직 계정 옆의 Configure를 눌러야 합니다.</aside>
+  </section>
+
+  <!-- ══════════ 13 · 첫 배포 ══════════ -->
+  <section class="slide" id="slide-13" aria-roledescription="slide">
+    <div class="split-layout">
+      <div class="split-left">
+        <div class="badge-row-left" data-step="0">
+          <span class="step-indicator">PART 2 · 4/6</span>
+          <span class="role-badge auto">⚡ 자동 처리</span>
+        </div>
+        <h2 class="gradient-text" data-step="0">첫 배포!</h2>
+        <div class="card-list">
+          <div class="card-item" data-step="1">
+            <span class="icon">🔍</span>
+            <div class="text"><strong>Framework: Next.js 자동 감지 확인</strong><span>빌드 명령은 건드리지 말고 그대로 두기</span></div>
+          </div>
+          <div class="card-item" data-step="2">
+            <span class="icon">🚀</span>
+            <div class="text"><strong>Deploy 버튼 클릭</strong><span>Environment Variables는 비워둔 채로 OK</span></div>
+          </div>
+          <div class="card-item" data-step="3" style="border-color:rgba(74,222,128,0.3);">
+            <span class="icon">🎉</span>
+            <div class="text">
+              <strong style="color:var(--green);">1~3분 후 URL 발급</strong>
+              <span style="color:var(--cyan);font-family:'Fira Code',monospace;font-size:0.82em;">https://my-app-xxxx.vercel.app</span>
+            </div>
+          </div>
+          <div class="warn-box" data-step="4">
+            <span class="wi">⚠️</span>
+            <div class="wt">이 시점 DB 연결 오류는 <strong>정상</strong> — 환경변수 미등록 때문</div>
+          </div>
+        </div>
+      </div>
+      <div class="split-right" data-step="1">
+        <div class="screenshot" onclick="openLightbox('images/vercel-6-configure.png')">
+          <img src="images/vercel-6-configure.png" alt="Vercel Configure" loading="lazy">
+        </div>
+        <p class="screenshot-caption">Framework가 Next.js인지 확인</p>
+      </div>
+    </div>
+    <aside class="speaker-notes">빌드 자체는 성공해야 합니다. 빌드 실패 시 vercel-guide.html FAQ를 참고하세요.</aside>
+  </section>
+
+  <!-- ══════════ 14 · 환경변수 등록 ══════════ -->
+  <section class="slide" id="slide-14" aria-roledescription="slide">
+    <div class="split-layout">
+      <div class="split-left">
+        <div class="badge-row-left" data-step="0">
+          <span class="step-indicator">PART 2 · 5/6</span>
+          <span class="role-badge human">👤 사람이 직접</span>
+        </div>
+        <h2 class="gradient-text" data-step="0">환경변수 등록 + Redeploy</h2>
+        <p data-step="0" style="text-align:left;font-size:clamp(0.68rem,1.08vw,0.88rem);">Settings → Environment Variables</p>
+        <div class="card-list">
+          <div class="card-item" data-step="1" style="border-color:rgba(74,222,128,0.35);">
+            <span class="icon">①</span>
+            <div class="text"><strong style="color:var(--green);">DATABASE_URL</strong><span>NeonDB Pooled URL (Connection pooling ON)</span></div>
+          </div>
+          <div class="card-item" data-step="2" style="border-color:rgba(34,211,238,0.35);">
+            <span class="icon">②</span>
+            <div class="text"><strong style="color:var(--cyan);">DIRECT_URL</strong><span>NeonDB Direct URL (Connection pooling OFF)</span></div>
+          </div>
+          <div class="warn-box" data-step="3">
+            <span class="wi">⚠️</span>
+            <div class="wt"><strong>Sensitive는 처음엔 끄고 저장!</strong> 켜면 이후 수정 불가</div>
+          </div>
+          <div class="card-item" data-step="4">
+            <span class="icon">🔄</span>
+            <div class="text"><strong>Deployments → 최신 배포 ⋯ → Redeploy</strong><span>등록 후 반드시 Redeploy</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="split-right" data-step="1">
+        <div class="screenshot" onclick="openLightbox('images/vercel-7a-envnav.png')">
+          <img src="images/vercel-7a-envnav.png" alt="Environment Variables 메뉴" loading="lazy">
+        </div>
+        <div class="screenshot" onclick="openLightbox('images/vercel-7-envvars.png')">
+          <img src="images/vercel-7-envvars.png" alt="환경변수 입력" loading="lazy">
+        </div>
+        <p class="screenshot-caption">클릭하면 크게 볼 수 있어요</p>
+      </div>
+    </div>
+    <aside class="speaker-notes">Sensitive 옵션을 켜면 나중에 수정이 불가능하므로 처음에는 끄고 저장을 권장합니다.</aside>
+  </section>
+
+  <!-- ══════════ 14b · Redeploy ══════════ -->
+  <section class="slide" id="slide-14b" aria-roledescription="slide">
+    <div class="slide-content" style="max-width:82%;">
+      <div class="badge-row" data-step="0">
+        <span class="step-indicator">PART 2 · 5/6 보충</span>
+        <span class="role-badge human">👤 Redeploy 하는 법</span>
+      </div>
+      <h2 class="gradient-text" data-step="0">Redeploy</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:clamp(10px,1.5vw,18px);width:100%;max-width:660px;" data-step="1">
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:center;">
+          <div class="screenshot" onclick="openLightbox('images/vercel-7b-deployments.png')" style="width:100%;">
+            <img src="images/vercel-7b-deployments.png" alt="Deployments 탭" loading="lazy">
+          </div>
+          <p style="font-size:clamp(0.58rem,0.85vw,0.74rem);color:var(--text2);text-align:center;">① Deployments → 최신 배포 ⋯</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:center;">
+          <div class="screenshot" onclick="openLightbox('images/vercel-7c-redeploy.png')" style="width:100%;">
+            <img src="images/vercel-7c-redeploy.png" alt="Redeploy" loading="lazy">
+          </div>
+          <p style="font-size:clamp(0.58rem,0.85vw,0.74rem);color:var(--text2);text-align:center;">② Redeploy 클릭</p>
+        </div>
+      </div>
+      <div data-step="2" style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.25);border-radius:10px;padding:clamp(8px,1.2vh,14px) clamp(13px,1.7vw,20px);max-width:660px;width:100%;text-align:center;">
+        <p style="font-size:clamp(0.78rem,1.25vw,1.02rem);color:var(--green);">✅ Redeploy 완료 후 URL 접속 → DB 연결 정상 확인!</p>
+      </div>
+    </div>
+    <aside class="speaker-notes">Redeploy가 완료되면 발급된 URL에 접속해서 정상 동작하는지 확인하세요.</aside>
+  </section>
+
+  <!-- ══════════ 15 · 배포 완료 ══════════ -->
+  <section class="slide" id="slide-15" aria-roledescription="slide">
+    <div class="slide-content" style="max-width:78%;">
+      <div class="badge-row" data-step="0">
+        <span class="step-indicator">PART 2 · 6/6</span>
+        <span class="role-badge done">✅ 완료</span>
+      </div>
+      <h2 class="gradient-green" data-step="0">배포 완료! 🎉</h2>
+      <div class="card-list" style="max-width:620px;width:100%;">
+        <div class="card-item" data-step="1" style="border-color:rgba(74,222,128,0.35);">
+          <span class="icon">✅</span>
+          <div class="text"><strong>Redeploy 후 URL 접속 → 정상 동작 확인</strong><span>DB 연결 · 로그인 · 데이터 저장 모두 살아 있어야 합니다</span></div>
+        </div>
+        <div class="card-item" data-step="2">
+          <span class="icon">🔄</span>
+          <div class="text"><strong>이후 자동 배포</strong><span>Claude Code로 코드 수정 → <span style="color:var(--cyan);font-family:'Fira Code',monospace;">git push</span> → Vercel 자동 빌드·배포</span></div>
+        </div>
+        <div class="card-item" data-step="3">
+          <span class="icon">👀</span>
+          <div class="text"><strong>PR 미리보기 자동 발급</strong><span>main 외 브랜치 push 시 Preview URL 자동 생성</span></div>
+        </div>
+      </div>
+    </div>
+    <aside class="speaker-notes">배포가 완료되었습니다! 이제 코드 수정 후 git push만 하면 자동 배포됩니다.</aside>
+  </section>
+
+  <!-- ══════════ 16 · 마무리 체크리스트 ══════════ -->
+  <section class="slide" id="slide-16" aria-roledescription="slide">
+    <div class="slide-content" style="max-width:76%;">
+      <div data-step="0" style="text-align:center;">
+        <h2 class="gradient-text">완료 체크리스트</h2>
+        <p style="margin-top:3px;font-size:clamp(0.62rem,0.95vw,0.8rem);">
+          상세 가이드 →
+          <a href="neondb-guide.html" style="color:var(--cyan);text-decoration:none;font-weight:600;">neondb-guide.html</a>
+          &nbsp;·&nbsp;
+          <a href="vercel-guide.html" style="color:var(--cyan);text-decoration:none;font-weight:600;">vercel-guide.html</a>
+        </p>
+      </div>
+      <div class="checklist" style="max-width:620px;width:100%;">
+        <div class="check-row" data-step="1"><span class="check-icon">✅</span><span class="check-text">NeonDB 가입 + 프로젝트 생성 (Singapore 리전)</span><span class="check-badge h">사람</span></div>
+        <div class="check-row" data-step="2"><span class="check-icon">✅</span><span class="check-text">Connection String 두 개 복사 (Pooled + Direct)</span><span class="check-badge h">사람</span></div>
+        <div class="check-row" data-step="3"><span class="check-icon">✅</span><span class="check-text">Claude Code로 DB 연결 + 검증 완료</span><span class="check-badge a">Claude Code</span></div>
+        <div class="check-row" data-step="4"><span class="check-icon">✅</span><span class="check-text">GitHub 저장소 생성 + Claude Code로 코드 push</span><span class="check-badge ha">사람+Claude Code</span></div>
+        <div class="check-row" data-step="5"><span class="check-icon">✅</span><span class="check-text">Vercel Import + 환경변수 등록 + Redeploy</span><span class="check-badge h">사람</span></div>
+        <div class="check-row" data-step="6" style="border-color:rgba(74,222,128,0.35);background:rgba(74,222,128,0.04);">
+          <span class="check-icon">🎉</span>
+          <span class="check-text" style="color:var(--green);">배포 완료!</span>
+          <span class="check-badge ha" style="background:rgba(74,222,128,0.15);color:var(--green);">완료</span>
+        </div>
+      </div>
+    </div>
+    <aside class="speaker-notes">전체 과정이 완료되었습니다. 문제가 생기면 각 가이드의 FAQ 섹션을 참고하세요.</aside>
+  </section>
+
+</div><!-- /presentation -->
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="event.stopPropagation();closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="" onclick="closeLightbox()">
+</div>
+
+<div class="presentation-controls">
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+</div>
+<div class="slide-counter"><span id="currentNum">1</span> / <span id="totalNum"></span></div>
+<div class="transition-label" id="transitionLabel">transition: fade</div>
+
+<script>
+/* ── Prompt 복사 ── */
+function copyPrompt(btn) {
+  const scroll = btn.closest('.prompt-code-box').querySelector('.pcb-scroll');
+  navigator.clipboard.writeText(scroll.innerText.trim()).then(() => {
+    btn.textContent = '✅ 복사됨!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 복사'; btn.classList.remove('copied'); }, 2200);
+  }).catch(() => {
+    btn.textContent = '❌ 실패';
+    setTimeout(() => { btn.textContent = '📋 복사'; }, 1500);
+  });
+}
+
+/* ── Lightbox ── */
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightboxImg').src = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('lightbox').classList.contains('open')) {
+    e.stopPropagation(); closeLightbox();
+  }
+}, true);
+
+/* ── Presentation ── */
+(function () {
+  'use strict';
+
+  const container = document.getElementById('presentation');
+  const slides    = [...container.querySelectorAll('.slide')];
+  const total     = slides.length;
+  let current     = 0;
+  let locked      = false;
+
+  const TRANSITION_TYPES = ['fade', 'slide', 'zoom'];
+  let transitionType = 0;
+  const DURATION = 450;
+
+  const progressFill    = document.getElementById('progressFill');
+  const currentNumEl    = document.getElementById('currentNum');
+  const totalNumEl      = document.getElementById('totalNum');
+  const transitionLabel = document.getElementById('transitionLabel');
+  totalNumEl.textContent = total;
+
+  /* Build */
+  function initBuild(el) {
+    const steps = el.querySelectorAll('[data-step]');
+    steps.forEach(s => { s.style.transitionDelay=''; s.classList.remove('visible'); });
+    const nums = [...new Set([...steps].map(s=>parseInt(s.dataset.step,10)))].sort((a,b)=>a-b);
+    nums.forEach((n,i) => {
+      el.querySelectorAll(`[data-step="${n}"]`).forEach((s,j)=>{
+        s.style.transitionDelay=`${i*280+j*45}ms`;
+        s.classList.add('visible');
+      });
+    });
+  }
+
+  function updateUI() {
+    progressFill.style.width = ((current+1)/total)*100+'%';
+    currentNumEl.textContent = current+1;
+    history.replaceState(null,'',`#slide-${current+1}`);
+  }
+
+  /* Transition */
+  function performTransition(fromIdx, toIdx, dir) {
+    if (locked) return;
+    locked = true;
+    const from=slides[fromIdx], to=slides[toIdx];
+    const type=TRANSITION_TYPES[transitionType];
+    const ease='cubic-bezier(0.4,0,0.2,1)';
+    const tCss=`opacity ${DURATION}ms ${ease}, transform ${DURATION}ms ${ease}`;
+
+    from.classList.add('transitioning-out');
+    to.classList.add('transitioning-in');
+    from.style.willChange=to.style.willChange='transform, opacity';
+
+    let cleaned=false, safety;
+    function cleanup() {
+      if (cleaned) return; cleaned=true; clearTimeout(safety);
+      from.classList.remove('active','transitioning-out');
+      to.classList.remove('transitioning-in');
+      to.classList.add('active');
+      from.style.cssText=to.style.cssText='';
+      current=toIdx; locked=false;
+      initBuild(to); updateUI();
+    }
+    safety = setTimeout(cleanup, DURATION+280);
+
+    if (type==='fade') {
+      to.style.opacity='0'; to.style.transform='none'; to.style.transition='none'; from.style.transition='none';
+      to.offsetHeight;
+      requestAnimationFrame(()=>{
+        to.style.transition=from.style.transition=tCss;
+        from.style.opacity='0'; to.style.opacity='1';
+        to.addEventListener('transitionend',function h(e){ if(e.target!==to||e.propertyName!=='opacity')return; to.removeEventListener('transitionend',h); cleanup(); });
+      });
+    } else if (type==='slide') {
+      const xIn=dir==='next'?'100%':'-100%', xOut=dir==='next'?'-100%':'100%';
+      to.style.transform=`translateX(${xIn})`; to.style.opacity='1'; to.style.transition='none'; from.style.transition='none';
+      to.offsetHeight;
+      requestAnimationFrame(()=>{
+        to.style.transition=from.style.transition=tCss;
+        from.style.transform=`translateX(${xOut})`; to.style.transform='translateX(0)';
+        to.addEventListener('transitionend',function h(e){ if(e.target!==to||e.propertyName!=='transform')return; to.removeEventListener('transitionend',h); cleanup(); });
+      });
+    } else {
+      to.style.opacity='0'; to.style.transform='scale(0.88)'; to.style.transition='none'; from.style.transition='none';
+      to.offsetHeight;
+      requestAnimationFrame(()=>{
+        to.style.transition=from.style.transition=tCss;
+        from.style.opacity='0'; from.style.transform='scale(1.08)';
+        to.style.opacity='1'; to.style.transform='scale(1)';
+        to.addEventListener('transitionend',function h(e){ if(e.target!==to||e.propertyName!=='opacity')return; to.removeEventListener('transitionend',h); cleanup(); });
+      });
+    }
+  }
+
+  function goNext() { if (!locked&&current<total-1) performTransition(current,current+1,'next'); }
+  function goPrev() { if (!locked&&current>0) performTransition(current,current-1,'prev'); }
+  function goTo(i)  { if (!locked&&i!==current&&i>=0&&i<total) performTransition(current,i,i>current?'next':'prev'); }
+
+  /* Keyboard */
+  document.addEventListener('keydown',(e)=>{
+    if (document.getElementById('lightbox').classList.contains('open')) return;
+    if (e.ctrlKey||e.metaKey||e.altKey) return;
+    if (e.target.matches('input,textarea,[contenteditable]')) return;
+    switch(e.key){
+      case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown': e.preventDefault(); goNext(); break;
+      case 'ArrowLeft':  case 'ArrowUp':             case 'PageUp':   e.preventDefault(); goPrev(); break;
+      case 'Home': e.preventDefault(); goTo(0); break;
+      case 'End':  e.preventDefault(); goTo(total-1); break;
+      case 'f': case 'F': e.preventDefault(); document.fullscreenElement?document.exitFullscreen():container.requestFullscreen?.(); break;
+      case 's': case 'S': document.body.classList.toggle('show-notes'); break;
+      case 't': case 'T': transitionType=(transitionType+1)%TRANSITION_TYPES.length; transitionLabel.textContent=`transition: ${TRANSITION_TYPES[transitionType]}`; break;
+    }
+  });
+
+  /* Pointer drag */
+  let dragX=0,dragY=0,dragT=0,dragging=false;
+  container.addEventListener('pointerdown',(e)=>{
+    dragX=e.clientX; dragY=e.clientY; dragT=Date.now(); dragging=true;
+    // 스크린샷/버튼/링크/프롬프트박스 위에서는 캡처하지 않아야 onclick·스크롤 정상 동작함
+    if(e.target.closest('.screenshot,.pcb-scroll,.pcb-copy,button,a,[onclick]')) return;
+    e.preventDefault();
+    container.setPointerCapture(e.pointerId);
+  });
+  container.addEventListener('pointerup',(e)=>{ if(!dragging)return; dragging=false; const dx=e.clientX-dragX,dy=e.clientY-dragY,dt=Date.now()-dragT; if(dt>2000)return; const ax=Math.abs(dx),ay=Math.abs(dy); if(ax>=ay&&ax>=50){dx<0?goNext():goPrev();}else if(ay>ax&&ay>=50){dy<0?goNext():goPrev();} });
+  container.addEventListener('pointercancel',()=>{ dragging=false; });
+  container.addEventListener('dragstart',e=>e.preventDefault());
+
+  /* Wheel */
+  let wheelLock=false;
+  container.addEventListener('wheel',(e)=>{
+    // pcb-scroll 안에서는 아직 스크롤 여지가 있으면 내부 스크롤 우선
+    const scrollEl = e.target.closest('.pcb-scroll');
+    if (scrollEl) {
+      const canDown = scrollEl.scrollTop + scrollEl.clientHeight < scrollEl.scrollHeight - 1;
+      const canUp   = scrollEl.scrollTop > 1;
+      if ((e.deltaY > 0 && canDown) || (e.deltaY < 0 && canUp)) return;
+    }
+    e.preventDefault();
+    if(wheelLock)return; wheelLock=true;
+    if(e.deltaY>0||e.deltaX>0)goNext();else goPrev();
+    setTimeout(()=>{ wheelLock=false; },620);
+  },{passive:false});
+
+  /* Progress bar */
+  document.getElementById('progressBar').addEventListener('click',(e)=>{ const r=e.currentTarget.getBoundingClientRect(); goTo(Math.floor((e.clientX-r.left)/r.width*total)); });
+
+  /* Hash */
+  function restoreHash(){ const m=location.hash.match(/(\d+)/); if(!m)return; const idx=parseInt(m[1],10)-1; if(idx>=0&&idx<total&&idx!==current){slides[current].classList.remove('active');slides[idx].classList.add('active');current=idx;initBuild(slides[current]);updateUI();} }
+  window.addEventListener('hashchange',restoreHash);
+
+  initBuild(slides[0]); updateUI(); restoreHash();
+})();
+</script>
+</body>
+</html>
+
