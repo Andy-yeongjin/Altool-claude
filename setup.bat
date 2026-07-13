@@ -57,6 +57,8 @@ echo   Copying files...
 
 :: Altool engine (steps + templates + rules)
 xcopy /e /i /y "%ALTOOL_DIR%\altool" "%PROJECT_DIR%\altool" > nul
+for /d /r "%PROJECT_DIR%\altool" %%d in (__pycache__) do if exist "%%d" rmdir /s /q "%%d"
+del /s /q "%PROJECT_DIR%\altool\*.pyc" "%PROJECT_DIR%\altool\*.pyo" 2>nul
 echo   [OK] altool\ (engine)
 
 :: CLAUDE.md (Claude Code project instructions)
@@ -123,6 +125,10 @@ if not exist "%PROJECT_DIR%\.gitignore" (
         echo # Node
         echo node_modules/
         echo .next/
+        echo.
+        echo # Python
+        echo __pycache__/
+        echo *.py[cod]
         echo.
         echo # Env / secrets
         echo .env
