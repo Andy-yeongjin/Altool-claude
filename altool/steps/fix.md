@@ -24,7 +24,7 @@
 - Functional 갭(SHALLOW 파일)은 run 단계의 Depth-First 기준으로 완성한다: TODO 제거, 실데이터 연결, Page UI Checklist 항목 충족
 - Contract 갭은 Spec §4 스키마에 맞춰 서버·클라이언트 양쪽 정렬
 - **설계 자체가 잘못된 경우** → 코드를 끼워 맞추지 말고 Spec 문서를 수정한 후 해당 갭을 갱신 (헌법 제9조: 명세-코드 동기화)
-- **Altool 확장**: 수정 중에도 `designs/design.md`의 시각 값·컴포넌트 계약·미디어 규칙을 추적 가능하게 사용하고, TypeScript Strict와 보안 규칙을 준수
+- **Altool 확장**: 수정 중에도 `designs/claude-design/*.html`이 있으면 최우선 디자인 헌법으로 사용하고, `designs/design.md`의 시각 값·컴포넌트 계약·미디어 규칙을 추적 가능하게 사용하며, TypeScript Strict와 보안 규칙을 준수
 - **React/Next.js 보조 스킬**: `.claude/skills/vercel-react-best-practices/SKILL.md`가 있으면 React/Next 성능 갭 수정에 적용한다. 없으면 `skipped(skill unavailable)`로 보고하고 계속한다.
 
 수정 완료 후 `npm run build` 성공 확인 (Altool 확장 — 실패 시 수정 후 재빌드).
@@ -89,7 +89,6 @@
    산출물: docs/03-analyze/{기능명}.fix.md
    다음 단계: /altool browser  (또는 남은 갭 안내)
 ```
-
 
 
 

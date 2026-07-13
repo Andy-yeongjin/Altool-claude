@@ -9,7 +9,7 @@
 
 기능 설명 하나로 웹 조사 → 개발 계획 → 구현 명세 → 구현 → 갭 분석 → 자동 개선 → 브라우저 검증까지 **7단계를 자동 완주**합니다.
 각 단계는 `altool/steps/`의 해당 step을 **자동 파이프라인 모드**(Checkpoint 생략, 권장 옵션 자동 선택 — Altool 공통 규칙)로 실행합니다.
-헌법·조건부 디자인 정책은 엔진에 내장되어 있으므로 별도 지시문 주입이 필요 없습니다. 디자인 기준 우선순위는 `designs/` 사용자 디자인 입력(`.pen`, Stitch, 스크린샷, 디자인 문서) → `designs/design.md` → Research가 생성한 디자인 시스템 → AI 자체 판단입니다. `constitution.md`의 디자인 품질 원칙은 모든 원천에 항상 적용합니다. oneshot의 research 단계는 UI 작업에서 디자인 시스템이 없거나 비어 있거나 첫 non-empty line에 `TBD`가 있으면 참조 사이트와 사용자 디자인 입력을 근거로 `design.md`를 먼저 생성하고 `TBD` 마커를 제거합니다. 이후 plan/spec/run은 Research의 시각 관찰값을 직접 구현하지 않고 이 디자인 시스템을 구현 기준으로 사용합니다.
+헌법·조건부 디자인 정책은 엔진에 내장되어 있으므로 별도 지시문 주입이 필요 없습니다. 디자인 기준 우선순위는 `designs/claude-design/*.html` → `designs/` 사용자 디자인 입력(`.pen`, Stitch, 스크린샷, 디자인 문서) → `designs/design.md` → Research가 생성한 디자인 시스템 → AI 자체 판단입니다. `constitution.md`의 디자인 품질 원칙은 모든 원천에 항상 적용합니다. oneshot은 `designs/claude-design/*.html`, `.pen`, Stitch가 있고 디자인 시스템이 없거나 오래됐거나 `TBD`이면 research 전에 `altool/steps/design_source.md`를 자동 수행해 `designs/design.md`를 먼저 갱신합니다. 이후 plan/spec/run은 Research의 시각 관찰값을 직접 구현하지 않고 이 디자인 시스템과 Claude 디자인 HTML을 구현 기준으로 사용합니다.
 
 ---
 
@@ -24,6 +24,7 @@
    | 엔진 | `altool/` | 필수 | 중단 — setup.bat 안내 |
    | 선행 조사 | `docs/00-research/*.research.md` | 선택 | oneshot의 research와 함께 참고 |
    | 헌법 | `constitution.md` | 권장 | 1회 경고 후 계속 (Altool 자산 규칙) |
+   | Claude 디자인 헌법 | `designs/claude-design/*.html` | 선택, 있으면 최우선 | research 전 `design_source` 자동 실행 |
    | 디자인 시스템 | `designs/design.md` | UI 작업 필수 | research 단계에서 생성 |
    | 사용자 디자인 입력 | `designs/*.pen`, `designs/stitch/`, `designs/*.{png,jpg,jpeg,webp}`, `designs/*.{md,pdf}` | 선택 | research에서 디자인 시스템 생성 근거로 사용 |
    | PRD | `prd/*.md` | 선택 | — 표시 |
@@ -34,8 +35,21 @@
    감지 결과 보고:
    ```
    [0/7] 입력 자산 감지 완료
-     Research: ✅/—  헌법: ✅/—  디자인 시스템: ✅/—  사용자 디자인 입력: ✅/—  PRD: ✅/—  PRD 참고: ✅/—
+     Research: ✅/—  헌법: ✅/—  Claude 디자인: ✅/—  디자인 시스템: ✅/—  사용자 디자인 입력: ✅/—  PRD: ✅/—  PRD 참고: ✅/—
    ```
+
+4. **디자인 소스 자동 정규화**: 아래 조건 중 하나라도 참이면 [1/7] research 전에 `altool/steps/design_source.md`를 자동 수행한다. 사용자가 별도로 `/altool design_source`를 입력할 필요가 없다.
+   - `designs/claude-design/*.html`이 있고 `designs/design.md`가 없거나 비어 있거나 첫 non-empty line에 `TBD`가 있음
+   - `designs/claude-design/*.html`이 `designs/design.md`보다 최신이거나, `design.md`의 Reference Source Map에 해당 HTML 경로가 없음
+   - `designs/stitch/` 또는 `designs/*.pen`이 있고 `designs/design.md`가 없거나 비어 있거나 첫 non-empty line에 `TBD`가 있음
+
+   자동 실행 시 출력:
+   ```text
+   🥚 [0.5/7] 디자인 소스 자동 정규화 시작...
+   🐣 [0.5/7] 디자인 소스 자동 정규화 완료: designs/design.md
+   ```
+
+   `designs/claude-design/`에 HTML이 여러 개 있고 색상·타이포·컴포넌트 규칙이 충돌하면 자동 병합하지 말고 어떤 HTML이 권위 기준인지 사용자에게 확인한다. 충돌이 없으면 모든 HTML을 화면별 디자인 헌법으로 반영한다.
 
 ---
 
@@ -48,7 +62,7 @@
 
 | 단계 | 실행 | 비고 |
 |------|------|------|
-| [1/7] 웹 조사 | `altool/steps/research.md` 수행 | 입력 기능 설명과 PRD 기준으로 조사하고, `docs/00-research/`에 기록. PRD가 있으면 research는 PRD 구현 보강재로만 사용 |
+| [1/7] 웹 조사 | `altool/steps/research.md` 수행 | 입력 기능 설명과 PRD 기준으로 조사하고, `docs/00-research/`에 기록. PRD가 있으면 research는 PRD 구현 보강재로만 사용. Claude 디자인 HTML이 있으면 이미 정규화된 `designs/design.md`와 원본 HTML을 함께 기준으로 사용 |
 | [2/7] 개발 계획 | `altool/steps/plan.md` 수행 | PRD를 기준 계약으로 두고, research와 refs·.pen은 보강 컨텍스트로 전달 |
 | [3/7] 구현 명세 | `altool/steps/spec.md` 수행 | 아키텍처 Option C 자동 선택 |
 | [4/7] 코드 구현 | `altool/steps/run.md` 수행 | Depth-First, 빌드 검증 포함 |
@@ -110,7 +124,6 @@ browser 하위 check에는 `visual.reference_comparison`, `visual.css_custom_pro
   • 다음 기능: /altool oneshot [기능 설명]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
-
 
 
 

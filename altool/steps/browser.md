@@ -23,6 +23,7 @@
 - 기능명은 `.altool/state/status.json`의 `currentFeature`에서 읽는다. `currentFeature`가 없으면 `/altool plan {기능 설명}` 먼저 실행을 안내하고 중단한다.
 - 다음 파일을 가능한 범위에서 읽는다:
   - `constitution.md`
+  - `designs/claude-design/*.html`
   - `designs/design.md`
   - `designs/*.pen`, `designs/stitch/`, `designs/*.{png,jpg,jpeg,webp}`, `designs/*.{md,pdf}`
   - `docs/01-plan/features/{기능명}.plan.md`
@@ -74,6 +75,7 @@ Playwright fallback 규칙:
 6. desktop과 mobile 375px 이상 반응형
 7. 텍스트 겹침, 잘림, 오버플로, 클릭 불가 영역, 레이아웃 깨짐
 8. 사용자 디자인 입력, 디자인 시스템, constitution.md 디자인 품질 원칙 위반
+   - `designs/claude-design/*.html`이 있으면 최종 화면과 원본 HTML의 구조·밀도·위계·컴포넌트 외형·색상·간격·타이포·상태 표현을 먼저 대조한다.
    - `designs/design.md`의 Screen Recipes와 Capture-to-Implementation Map을 최종 화면과 대조한다.
    - 참조 브랜드·문구·이미지는 복제하지 않되, research가 추출한 구조·비례·밀도·섹션 순서·컴포넌트 외형 계약이 구현됐는지 확인한다.
    - 캡처 기반 recipe가 있는데도 일반 split SaaS hero, floating trust card 묶음, 과한 gradient overlay, glass panel, 추상 장식, 카드 그림자 남발, reference보다 느슨한 빈 화면으로 회귀하면 디자인 갭으로 기록하고 수정한다.
@@ -90,7 +92,7 @@ CSS custom property 검증 규칙:
 
 참조 캡처 대조 규칙:
 
-- `designs/design.md`의 Reference Source Map, Screen Recipes, Capture-to-Implementation Map에서 참조 캡처 경로(`docs/00-research/assets/{Research ID}/C-__.png`)를 수집한다.
+- `designs/claude-design/*.html`이 있으면 원본 HTML 경로를 최우선 참조로 수집한다. 이어서 `designs/design.md`의 Reference Source Map, Screen Recipes, Capture-to-Implementation Map에서 참조 캡처 경로(`docs/00-research/assets/{Research ID}/C-__.png`)를 수집한다.
 - 최종 구현 화면도 desktop과 mobile 주요 상태별로 스크린샷을 저장한다. 권장 경로는 `docs/03-analyze/assets/{기능명}/browser-final-*.png`다.
 - browser 검증은 참조 캡처와 최종 화면 스크린샷을 나란히 대조한다. 픽셀 복제나 브랜드 동일성을 목표로 하지 않고, 구조·비례·밀도·섹션 순서·컴포넌트 외형·미디어 사용·타이포 위계가 Screen Recipe와 Capture Map을 따르는지 평가한다.
 - 참조 캡처가 있는데 최종 스크린샷이 없거나, 최종 스크린샷이 있는데 참조 캡처와의 대조표가 없으면 browser step을 완료하지 않는다.
@@ -101,7 +103,7 @@ CSS custom property 검증 규칙:
 브라우저 검증에서 코드 오류나 구현 갭이 발견되면 즉시 수정한다.
 
 - 코드/타입/상태/라우팅/이벤트 핸들러 문제는 코드 수정
-- 사용자 디자인 입력 미반영, 디자인 시스템 미사용, Screen Recipe/Capture Map 미반영, generic AI/SaaS 회귀, 반응형 깨짐, 텍스트 겹침은 스타일 수정
+- Claude 디자인 HTML 미반영, 사용자 디자인 입력 미반영, 디자인 시스템 미사용, Screen Recipe/Capture Map 미반영, generic AI/SaaS 회귀, 반응형 깨짐, 텍스트 겹침은 스타일 수정
 - spec 또는 plan 자체가 틀렸으면 헌법 제9조에 따라 문서를 먼저 보정하고 수정
 
 수정 후 같은 브라우저 시나리오를 다시 실행한다. 같은 browser step 안에서 보완·검증 루프는 최대 5회까지 수행한다. 5회 후에도 실패하면 중지하고 남은 실패를 보고한다.

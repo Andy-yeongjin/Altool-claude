@@ -14,6 +14,7 @@ Altool은 세 가지를 모든 구현의 기준으로 삼아 개발 사이클을
 | 자산 | 파일 | 역할 |
 |------|------|------|
 | **프로젝트 헌법** | `constitution.md` | 개발 원칙 + 범용 디자인 품질 원칙 — 명세 우선, 보안, 반응형, 사용자 디자인 입력 우선 등 |
+| **Claude 디자인 헌법** | `designs/claude-design/*.html` | Claude에서 만든 HTML 화면 — 있으면 모든 디자인 기준 중 1순위 |
 | **사용자 디자인 입력** | `designs/*.pen`, `designs/stitch/`, 스크린샷, 디자인 문서 | 화면 구조, 정보 밀도, 시각 위계, 컴포넌트 외형의 최우선 원천 |
 | **디자인 시스템** | `designs/design.md` | 프로젝트 고유 색상·폰트·간격·컴포넌트·미디어 규칙의 단일 원천 |
 
@@ -21,7 +22,7 @@ Altool은 세 가지를 모든 구현의 기준으로 삼아 개발 사이클을
 
 - **외부 플러그인 불필요** — 개발 사이클 엔진과 보조 Claude Code 스킬을 repo에 내장 (사용자별 설치 불필요)
 - **Research-first** — plan 전에 웹 조사 결과를 `docs/00-research/`에 누적하고, 만들 기능은 plan에서 확정
-- **헌법·디자인 시스템 정책 내장** — 사용자 디자인 입력 우선, `design.md`를 구현 기준으로 사용, 없으면 Research/디자인 소스가 먼저 생성
+- **헌법·디자인 시스템 정책 내장** — `designs/claude-design/*.html`이 있으면 1순위 디자인 헌법으로 사용, `design.md`를 구현 기준으로 정규화
 - **독립 검증 에이전트** — 갭 분석을 별도 에이전트가 수행해 자기 채점 편향 차단
 - **Match Rate 4축** — Structural/Functional/Contract/Runtime 가중 공식으로 일치율 측정
 - **문서 상태 동기화** — 단계 완료 시 상류 문서의 체크박스·Status 자동 갱신 (문서만 열어도 진행 상황이 보임)
@@ -48,6 +49,7 @@ Altool은 세 가지를 모든 구현의 기준으로 삼아 개발 사이클을
 
 ### 3. (선택) 디자인 파일이 있다면 먼저
 
+- **Claude 디자인 HTML**: Claude에서 만든 `.html` 파일을 `designs/claude-design/`에 넣기
 - **Pencil.dev**: `.pen` 파일을 `designs/`에 넣기
 - **Stitch**: ZIP 압축 해제 후 `designs/stitch/`에 넣기
 
@@ -56,6 +58,8 @@ Altool은 세 가지를 모든 구현의 기준으로 삼아 개발 사이클을
 ```
 
 색상·폰트·간격·컴포넌트 외형·미디어 규칙을 추출하고 `constitution.md`의 범용 디자인 품질 원칙을 기준으로 검토해 `designs/design.md`를 생성합니다.
+
+`/altool oneshot ...` 또는 `/altool freedom ...`을 바로 실행해도 됩니다. `designs/claude-design/*.html`이 있으면 두 명령은 research 전에 `design_source`를 자동 실행해 HTML을 `designs/design.md`로 정규화한 뒤 개발을 시작합니다.
 
 ### 4. 조사 후 기능 개발
 
@@ -98,14 +102,14 @@ Freedom 진행 상태는 `.altool/freedom/state.json`, `outbox.jsonl`, `journal.
 |--------|------|
 | `/altool setup` | 초기 설치 + 세션 재개 |
 | `/altool research [조사 주제]` | 웹 조사 → `docs/00-research/`, feature 생성 없음 |
-| `/altool oneshot [기능 설명]` | 웹 조사 포함 7단계 자동 완주 (PRD·.pen 자동 감지) |
-| `/altool freedom [목표] --loops N` | 무전기 inbox/outbox를 감시하며 지정 횟수만큼 자율 개발 사이클 진행 |
+| `/altool oneshot [기능 설명]` | 웹 조사 포함 7단계 자동 완주. `designs/claude-design/*.html`이 있으면 `design_source` 자동 실행 |
+| `/altool freedom [목표] --loops N` | 무전기 inbox/outbox를 감시하며 지정 횟수만큼 자율 개발 사이클 진행. 필요 시 `design_source` 자동 실행 |
 | `/altool say [내용]` | Freedom 루프에 방향 변경 전달 |
 | `/altool ask [내용]` | Freedom 루프 상태 질문 |
 | `/altool pause` / `/altool resume` / `/altool stop` | Freedom 일시정지·재개·중단 |
 | `/altool outbox` | Freedom 응답과 진행 로그 확인 |
 | `/altool guide` | 현재 단계 감지 + 다음 명령 안내 |
-| `/altool design_source` | .pen/Stitch → design.md 생성 |
+| `/altool design_source` | Claude HTML/.pen/Stitch → design.md 생성 |
 | `/altool lesson [내용]` | 바이브코딩 교훈 이벤트 기록·조회 — 전역 `~/.altool/events.jsonl`에 누적, index 검색으로 자동 회고 |
 | `/altool plan {기능 설명}` | PRD를 기준으로 삼고 research로 보강해 개발 계획 생성 → `docs/01-plan/features/` |
 | `/altool spec [추가 지시]` | 현재 plan 기준 구현 명세 (아키텍처 3안 비교) → `docs/02-spec/features/` |
@@ -127,6 +131,7 @@ Freedom 진행 상태는 `.altool/freedom/state.json`, `outbox.jsonl`, `journal.
 | `.claude/commands/altool.md` | `setup.bat`이 설치하는 Claude Code 로컬 커맨드 `/altool` |
 | `.claude/skills/vercel-react-best-practices/` | React/Next.js 구현·리뷰·리팩터링 시 적용되는 Vercel 성능 최적화 스킬 |
 | `constitution.md` | 프로젝트 헌법 (개발 원칙 + 범용 디자인 품질 원칙) |
+| `designs/claude-design/` | Claude가 만든 HTML을 넣는 폴더. 있으면 최우선 디자인 헌법 |
 | `designs/` | 사용자 디자인 입력 + 디자인 시스템 (design.md) |
 | `prd/` | PRD 보관 폴더 (자동 감지) |
 | `start.bat` / `end.bat` | 개발 서버 실행/종료 |
@@ -144,7 +149,7 @@ Altool은 특정 스택을 강제하지 않습니다. plan/spec에서 요청 범
 | 단일 정적 페이지 | HTML/CSS/JS 허용 |
 | Database | 필요할 때 SQLite(로컬) → NeonDB/Supabase 등은 ADR로 결정 |
 | ORM | DB가 있을 때 Prisma 또는 Drizzle |
-| Styling | 프로젝트 구조에 맞는 CSS 방식 + `designs/design.md` 기반 스타일 |
+| Styling | `designs/claude-design/*.html` 우선 + `designs/design.md` 기반 스타일 |
 | Auth | 필요할 때 Auth.js 등으로 결정 |
 
 ---

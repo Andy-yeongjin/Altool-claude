@@ -38,8 +38,9 @@ winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agr
 | `.claude/commands/` | 필수 | Altool setup.bat 재실행 안내 후 중단 |
 | `.claude/skills/vercel-react-best-practices/` | 권장 | React/Next.js 성능 보조 스킬 비활성 안내 후 계속 |
 | `constitution.md` | 권장 | "헌법 검증이 비활성화됩니다" 안내 후 계속 |
+| `designs/claude-design/` | 권장 | 폴더 생성. Claude가 만든 HTML을 여기에 넣으면 최우선 디자인 헌법으로 사용 |
 | `designs/design.md` | 권장 | "디자인 시스템 기준이 비활성화됩니다. 디자인 소스가 있다면 /altool design_source 실행" 안내 후 계속 |
-| `designs/` 사용자 디자인 입력 | 선택 | `.pen`/Stitch는 `/altool design_source`, 스크린샷/디자인 문서는 plan/spec에서 직접 참조 |
+| `designs/` 사용자 디자인 입력 | 선택 | `claude-design/*.html`은 oneshot/freedom에서 `design_source` 자동 실행, `.pen`/Stitch는 `/altool design_source`, 스크린샷/디자인 문서는 plan/spec에서 직접 참조 |
 | `prd/` 폴더 | 선택 | 생성 |
 
 **4단계 — 완료 안내:**
@@ -63,7 +64,7 @@ winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agr
 다음 중 하나로 시작하세요:
   • /altool research [조사 주제]             ← 먼저 조사
   • /altool oneshot [만들고 싶은 기능 설명]  ← 한 번에 자동 개발
-  • /altool design_source                          ← .pen/Stitch로 디자인 시스템을 만들 때
+  • /altool design_source                          ← Claude HTML/.pen/Stitch로 디자인 시스템을 만들 때
   • /altool guide                           ← 뭘 해야 할지 모르겠다면
 ```
 
@@ -75,5 +76,4 @@ winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agr
 2. 마지막 phase 기준 다음 단계 명령을 안내한다.
 3. `CLAUDE.md`(프로젝트 루트)의 현재 개발 상태 섹션이 있으면 최신 상태로 갱신한다.
 4. `.altool/checks/setup.resume.json`을 작성하고 `python altool/scripts/check.py validate --json .altool/checks/setup.resume.json`를 실행한다. 실패하면 메시지를 보고 보완한 뒤 재검증하며, 최대 5회 실패 시 중지한다. 완료 안내에는 Step Check 요약을 포함한다. setup/resume 중 오류·차단은 안내에 남기며 lesson 이벤트로 기록하지 않는다.
-
 

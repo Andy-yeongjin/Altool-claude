@@ -21,12 +21,12 @@
 - `docs/00-research/*.research.md`가 있으면 최근/관련 조사 문서를 읽고 Plan의 배경·요구사항 후보·리스크에 반영한다. Research의 출처 품질 매트릭스, 근거 매핑, Plan 준비도, 다음 조사 후보도 확인한다.
 - `.altool/state/research.json`이 있으면 research ID, 파일 경로, sourceCount를 확인해 관련 조사 목록을 추린다.
 - `docs/00-pm/{기능명}.prd.md`가 있으면 읽고 Plan의 컨텍스트로 사용.
-- **Altool 자산 감지** (Altool 자산 감지 규칙): `prd/*.md`·`prd/refs/*`가 있으면 PRD·보조 컨텍스트로 읽는다 (충돌 시 PRD 우선). `designs/`의 사용자 디자인 입력(`*.pen`, `stitch/`, `*.png`, `*.jpg`, `*.jpeg`, `*.webp`, `*.md`, `*.pdf`)을 감지하고, `constitution.md`·`designs/design.md`가 있으면 읽고 강제 적용한다. UI 작업인데 디자인 시스템이 없으면 관련 research가 `designs/design.md`를 생성했는지 확인한다.
+- **Altool 자산 감지** (Altool 자산 감지 규칙): `prd/*.md`·`prd/refs/*`가 있으면 PRD·보조 컨텍스트로 읽는다 (충돌 시 PRD 우선). `designs/claude-design/*.html`을 최우선 디자인 헌법으로 감지하고, 그 다음 `designs/`의 사용자 디자인 입력(`*.pen`, `stitch/`, `*.png`, `*.jpg`, `*.jpeg`, `*.webp`, `*.md`, `*.pdf`)을 감지한다. `constitution.md`·`designs/design.md`가 있으면 읽고 강제 적용하되 Claude 디자인 HTML과 충돌하면 HTML을 우선한다. UI 작업인데 디자인 시스템이 없으면 관련 research가 `designs/design.md`를 생성했는지 확인한다.
 - PRD가 있으면 PRD를 기준 계약으로 삼고, Research는 PRD 구현을 더 잘하기 위한 보강재로만 사용한다. Research가 PRD에 없는 기능을 제안하면 자동으로 In Scope에 넣지 말고 후보/다음 사이클/Out of Scope에 기록한다.
 - PRD와 Research가 충돌하면 PRD를 우선한다. 충돌 항목, 선택한 기준, 제외/보류 사유를 Plan §1.6 또는 §2.2에 기록한다.
 - Plan은 문서 작성 단계이므로 `lesson.py search`와 `lesson.py append`를 실행하지 않는다.
-- 디자인 기준 우선순위는 `designs/` 사용자 디자인 입력 → `designs/design.md` → Research가 생성한 디자인 시스템 → AI 자체 판단이다. `constitution.md`의 디자인 품질 원칙은 이 우선순위와 별개로 항상 적용한다.
-- `designs/*.pen`이 있으면 Pencil MCP(batch_get)로 화면 구성을 읽고 UI 흐름에 반영한다. `designs/stitch/`가 있으면 Stitch 산출물의 구조와 디자인 의도를 읽는다. 스크린샷이나 디자인 문서가 있으면 레이아웃·밀도·위계·컴포넌트 외형의 직접 기준으로 반영한다.
+- 디자인 기준 우선순위는 `designs/claude-design/*.html` → `designs/` 사용자 디자인 입력 → `designs/design.md` → Research가 생성한 디자인 시스템 → AI 자체 판단이다. `constitution.md`의 디자인 품질 원칙은 이 우선순위와 별개로 항상 적용한다.
+- `designs/claude-design/*.html`이 있으면 HTML의 DOM/CSS/컴포넌트 구조를 먼저 읽고 UI 흐름과 성공 기준에 최상위 디자인 헌법으로 반영한다. `designs/*.pen`이 있으면 Pencil MCP(batch_get)로 화면 구성을 읽고 UI 흐름에 반영한다. `designs/stitch/`가 있으면 Stitch 산출물의 구조와 디자인 의도를 읽는다. 스크린샷이나 디자인 문서가 있으면 레이아웃·밀도·위계·컴포넌트 외형의 직접 기준으로 반영한다.
 - `designs/design.md`는 단일 디자인 시스템 원천이다. UI 작업에서 이 파일이 없거나 비어 있거나 첫 non-empty line에 `TBD`가 있으면 plan은 research 산출물에 디자인 시스템 생성 근거를 연결하고, 없을 경우 `/altool research` 또는 `/altool design_source`로 돌아가 생성하도록 기록한다.
 
 ### 2~4. 산출물 경로 확정
@@ -49,7 +49,7 @@
 
 확정된 요구사항으로 템플릿 전체 절을 채워 작성한다. 핵심:
 - **Research 반영**: 관련 research 문서의 출처 품질, 근거 매핑, 페이지/기능 인벤토리, 공통 패턴, 리스크, Plan 입력 후보를 선별해 §1.3 관련 문서와 §3 요구사항에 연결한다. 조사 결과와 다른 결정을 하면 사유를 남긴다.
-- **디자인 입력 반영**: `designs/` 사용자 디자인 입력이 있으면 §1.3 관련 문서와 §4 성공 기준에 그 경로를 명시하고, 디자인 시스템보다 우선한다고 기록한다. 디자인 시스템이 research에서 생성되었으면 해당 research ID와 `designs/design.md` 경로를 명시한다.
+- **디자인 입력 반영**: `designs/claude-design/*.html`이 있으면 §1.3 관련 문서와 §4 성공 기준에 그 경로를 명시하고, 디자인 시스템보다 우선하는 디자인 헌법이라고 기록한다. 그 외 `designs/` 사용자 디자인 입력도 경로를 명시하고 디자인 시스템보다 우선한다고 기록한다. 디자인 시스템이 research에서 생성되었으면 해당 research ID와 `designs/design.md` 경로를 명시한다.
 - **PRD 우선**: PRD가 있으면 §2 In Scope와 §3 FR은 PRD 요구사항을 빠짐없이 반영한다. Research는 요구사항의 구현 세부, UX 보강, 리스크, 성공 기준을 강화하는 데 사용한다.
 - **충돌 기록**: Research 제안이 PRD 범위를 넘거나 PRD와 충돌하면 §1.6 PRD/Research 대조 또는 §2.2 Out of Scope에 근거와 사유를 남긴다.
 - **§2.1 포함(In Scope)**: 메인 화면 관련 항목을 최우선으로 (헌법 제15조)
@@ -89,7 +89,6 @@ Plan 문서 작성과 Step Check가 통과하면 문서 상단 `상태`/`Status`
 🐣 [al:plan] {기능명} 완료 — 산출물: docs/01-plan/features/{기능명}.plan.md
    다음 단계: /altool spec
 ```
-
 
 
 

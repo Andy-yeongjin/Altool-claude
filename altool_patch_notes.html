@@ -351,6 +351,10 @@
             <p>개발 전에 웹 조사와 디자인 시스템 정규화를 먼저 수행하도록 <code>research</code> 단계가 추가되었습니다.</p>
           </article>
           <article class="item">
+            <h3>Claude 디자인 HTML 우선</h3>
+            <p><code>designs/claude-design/*.html</code>을 최우선 디자인 헌법으로 보고, <code>oneshot</code>과 <code>freedom</code>에서 자동 정규화합니다.</p>
+          </article>
+          <article class="item">
             <h3>자율 반복 개발 추가</h3>
             <p><code>freedom</code> 모드가 추가되어 지정한 횟수만큼 조사, 구현, 검증, 보고 사이클을 반복할 수 있습니다.</p>
           </article>
@@ -428,8 +432,14 @@
             <tr>
               <td>디자인 기준</td>
               <td><code>design.md</code>, <code>design-tokens.css</code>, 디자인 헌법 분리</td>
-              <td><code>designs/design.md</code>를 단일 구현 기준으로 강화</td>
-              <td>구현은 research 원문이 아니라 정규화된 디자인 시스템을 기준으로 합니다.</td>
+              <td><code>designs/claude-design/*.html</code> 1순위 + <code>designs/design.md</code> 정규화</td>
+              <td>Claude가 만든 HTML 화면을 디자인 헌법으로 두고, 구현은 정규화된 디자인 시스템과 원본 HTML을 함께 기준으로 합니다.</td>
+            </tr>
+            <tr>
+              <td>디자인 자동화</td>
+              <td>디자인 소스는 별도 단계로 실행</td>
+              <td><code>oneshot</code>/<code>freedom</code> 시작 시 <code>design_source</code> 자동 실행</td>
+              <td>HTML을 <code>designs/claude-design/</code>에 넣고 바로 개발 명령을 실행해도 디자인 시스템이 먼저 갱신됩니다.</td>
             </tr>
             <tr>
               <td>검증 방식</td>
@@ -547,7 +557,7 @@
           <tbody>
             <tr>
               <td><code>setup.bat</code></td>
-              <td>비대화형 경로 인자 지원, 폴더 선택 실패 시 수동 입력, Codex/Claude별 로컬 스킬 또는 커맨드 복사 추가.</td>
+              <td>비대화형 경로 인자 지원, 폴더 선택 실패 시 수동 입력, Codex/Claude별 로컬 스킬 또는 커맨드 복사, <code>designs/claude-design/</code> 폴더 생성 추가.</td>
             </tr>
             <tr>
               <td><code>LICENSE</code>, <code>THIRD_PARTY_NOTICES.md</code></td>
@@ -619,6 +629,7 @@
             <ul class="file-list">
               <li><code>CLAUDE.md</code></li>
               <li><code>.claude/commands/altool.md</code></li>
+              <li><code>designs/claude-design/.gitkeep</code></li>
               <li><code>altool/scripts/check.py</code></li>
               <li><code>altool/scripts/lesson.py</code></li>
               <li><code>altool/scripts/radio.py</code></li>

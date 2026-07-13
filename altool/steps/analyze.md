@@ -78,6 +78,7 @@
 **Altool 자산 감지 — 디자인 시스템 검증** (UI 기능이면 analyze 문서에 절 추가):
 | 항목 | 기준 |
 |------|------|
+| Claude 디자인 HTML 있음 | `designs/claude-design/*.html`이 있으면 최우선 디자인 헌법으로 보고, 구현 화면의 구조·밀도·위계·컴포넌트 외형·색상·간격·타이포·상태 표현이 HTML과 일치 |
 | 사용자 디자인 입력 있음 | `designs/`의 `.pen`, Stitch, 스크린샷, 디자인 문서가 있으면 Spec의 User Design Source와 구현 화면 구조·밀도·위계·컴포넌트 외형이 일치 |
 | 디자인 시스템 있음 | 구현 화면의 색상·타이포·폰트 스택·간격·둥글기·그림자·컴포넌트 외형·미디어 사용이 `designs/design.md`의 규칙과 추적 가능하게 일치. 참조 폰트 파일 복제 없이 `design.md`의 구현 font-family stack 사용 |
 | CSS custom properties | CSS 파일이 있으면 `var(--token)` 참조가 실제 정의(`--token:`)와 일치하는지 확인. 미정의 custom property는 해당 CSS 선언이 무효화될 수 있으므로 구현 갭 |
@@ -130,7 +131,6 @@ plan/spec 문서를 수정했으면 analyze Step Check만으로 끝내지 않는
 
 - 미해소 갭 0건 → `다음 단계: /altool browser`
 - 갭 존재 → `다음 단계: /altool fix` (Match Rate ≥90%여도)
-
 
 
 

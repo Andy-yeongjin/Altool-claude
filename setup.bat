@@ -97,6 +97,8 @@ if exist "%ALTOOL_DIR%\constitution.md" (
 
 :: designs/
 if not exist "%PROJECT_DIR%\designs\" mkdir "%PROJECT_DIR%\designs"
+if not exist "%PROJECT_DIR%\designs\claude-design\" mkdir "%PROJECT_DIR%\designs\claude-design"
+echo   [OK] designs\claude-design\ (Claude design HTML folder)
 for %%f in (design.md) do (
     if exist "%ALTOOL_DIR%\designs\%%f" (
         copy /y "%ALTOOL_DIR%\designs\%%f" "%PROJECT_DIR%\designs\%%f" > nul

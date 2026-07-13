@@ -12,6 +12,7 @@
 ```
 [ ] constitution.md / designs/design.md — Altool 자산
 [ ] prd/ (내용 있음)                — PRD
+[ ] designs/claude-design/*.html    — 최우선 Claude 디자인 헌법
 [ ] designs/*.pen, designs/stitch/  — 디자인 시스템 생성용 소스
 [ ] designs/*.{png,jpg,jpeg,webp,md,pdf} — 사용자 디자인 입력
 [ ] docs/00-research/               — 웹 조사
@@ -28,6 +29,7 @@
 | 조건 | 현재 상태 | 다음 실행 |
 |------|----------|----------|
 | `altool/` 없음 | 설치 전 | Altool setup.bat 실행 안내 |
+| `designs/claude-design/*.html` 있음 | Claude 디자인 헌법 있음 | `/altool design_source`로 정규화하거나 `/altool oneshot`/`freedom` 자동 정규화로 진행 |
 | 디자인 소스(.pen/Stitch) 있음 + design.md 없음 | 디자인 시스템 미확정 | `/altool design_source` |
 | 스크린샷/디자인 문서 있음 | 사용자 디자인 입력 있음 | `/altool research {조사 주제}` 또는 `/altool plan {기능 설명}` |
 | 00-research 없음 + 01-plan 없음 | 조사 필요 | `/altool research {조사 주제}` 또는 자동 진행 `/altool oneshot [기능설명]` |
@@ -65,6 +67,7 @@
 ## 특수 상황
 
 - `constitution.md` 없음 → "헌법 검증이 비활성 상태입니다. Altool setup.bat으로 구성하면 활성화됩니다." 안내 후 계속.
+- `designs/claude-design/*.html` 있음 → 이 HTML을 최우선 디자인 헌법으로 안내하고, `designs/design.md`보다 먼저 적용한다. `design.md`가 없거나 오래됐으면 `/altool design_source`로 정규화하도록 안내한다.
 - `designs/design.md` 없음 + `.pen`/Stitch 있음 → "디자인 소스가 있다면 `/altool design_source`로 디자인 시스템을 먼저 확정하세요." 안내 후 계속.
 - 스크린샷/디자인 문서만 있으면 `design_source`를 요구하지 않는다. plan/spec가 해당 자산을 User Design Source로 직접 참조한다.
 - research는 여러 번 반복할 수 있으며 `currentFeature`를 바꾸지 않는다.
@@ -85,6 +88,4 @@
 | `docs.synced` | `skipped(guide only)` |
 | `document.status` | `skipped(guide only)` |
 | `artifacts.created` | `skipped(guide only)` |
-
-
 
